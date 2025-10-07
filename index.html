@@ -1,60 +1,301 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>GlowGuide AI - Skin Analysis</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlowGuide AI - Free Skin Analysis</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
+            font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            text-align: center;
-            padding: 50px;
-            font-family: Arial;
+            min-height: 100vh;
+            padding: 20px;
         }
         .container {
-            background: rgba(255,255,255,0.1);
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
+            text-align: center;
+        }
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #ffa8a8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .camera-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            border: 3px solid white;
+            border-radius: 10px;
+            background: black;
+        }
+        .buttons {
+            margin: 20px 0;
         }
         button {
             background: #ff6b6b;
             color: white;
-            padding: 15px 30px;
             border: none;
-            border-radius: 25px;
-            font-size: 18px;
-            cursor: pointer;
+            padding: 15px 30px;
             margin: 10px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
-        h1 {
-            color: pink;
-            font-size: 2.5em;
+        button:hover {
+            background: #ff5252;
+            transform: scale(1.05);
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .product {
+            background: white;
+            color: #333;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .skin-type {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #ff6b6b;
+            border-radius: 20px;
+            margin: 10px 0;
+        }
+        .disclaimer {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 30px;
+        }
+        .loading {
+            display: none;
+            font-size: 18px;
+            margin: 20px 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>✨ GlowGuide AI ✨</h1>
-        <p>Your Personal Skin Analysis App</p>
-        <button onclick="analyzeSkin()">🔍 Analyze My Skin</button>
-        <div id="result" style="margin-top: 20px;"></div>
+        <div class="header">
+            <h1>✨ GlowGuide AI ✨</h1>
+            <p>Free Instant Skin Analysis & Personalized Recommendations</p>
+        </div>
+
+        <div class="camera-box">
+            <h3>📷 Step 1: Start Camera</h3>
+            <video id="webcam" autoplay playsinline></video>
+            <div class="buttons">
+                <button onclick="initCamera()">🎥 Start Camera</button>
+                <button onclick="analyzeSkin()" id="analyzeBtn" disabled>🔍 Analyze My Skin</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            🔬 AI is analyzing your skin... (This is a demo - real AI coming soon!)
+        </div>
+
+        <div id="result"></div>
+        <div id="recommendations"></div>
+
+        <p class="disclaimer">
+            ⚠️ Disclaimer: This AI provides cosmetic recommendations only. Not medical advice. 
+            Consult a dermatologist for serious concerns. We don't store your images.
+        </p>
     </div>
 
     <script>
-        function analyzeSkin() {
-            document.getElementById('result').innerHTML = `
-                <h2>🎯 Analysis Complete!</h2>
-                <p><strong>Skin Type:</strong> Combination Skin</p>
-                <p><strong>Recommendations:</strong></p>
-                <ul style="text-align: left;">
-                    <li>Use gentle cleanser daily</li>
-                    <li>Apply moisturizer with SPF</li>
-                    <li>Try niacinamide serum</li>
-                </ul>
-                <p><em>Real AI camera analysis coming soon!</em></p>
+        const webcamElement = document.getElementById('webcam');
+        const resultElement = document.getElementById('result');
+        const recommendationsElement = document.getElementById('recommendations');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loadingElement = document.getElementById('loading');
+
+        // Skin analysis database
+        const skinConditions = {
+            'Acne-Prone Skin': {
+                description: 'Shows signs of breakouts, redness, and inflammation',
+                symptoms: ['Pimples', 'Blackheads', 'Redness', 'Oily areas'],
+                products: [
+                    'CeraVe SA Cleanser - With Salicylic Acid to unclog pores',
+                    'The Ordinary Niacinamide 10% + Zinc 1% - Reduces inflammation',
+                    'La Roche-Posay Effaclar Duo - Targets acne and post-acne marks',
+                    'Neutrogena Oil-Free Acne Wash - Daily prevention'
+                ],
+                routine: '🔄 Cleanse twice daily → 🧴 Apply treatment serum → 💧 Oil-free moisturizer'
+            },
+            'Dry Skin': {
+                description: 'Shows signs of flakiness, tightness, and dehydration',
+                symptoms: ['Flaky patches', 'Tight feeling', 'Rough texture', 'Redness'],
+                products: [
+                    'La Roche-Posay Lipikar Moisturizer - Intense 24h hydration',
+                    'The Ordinary Hyaluronic Acid 2% + B5 - Attracts moisture',
+                    'CeraVe Moisturizing Cream - Repairs skin barrier',
+                    'Kiehl\'s Ultra Facial Cream - Non-greasy hydration'
+                ],
+                routine: '🔄 Gentle cleanse → 💦 Hydrating serum → 🧴 Rich moisturizer'
+            },
+            'Combination Skin': {
+                description: 'Oily in T-zone, dry/normal on cheeks',
+                symptoms: ['Oily forehead/nose', 'Dry cheeks', 'Visible pores', 'Variable texture'],
+                products: [
+                    'Cetaphil Gentle Cleanser - Balances all skin types',
+                    'Paula\'s Choice 2% BHA Liquid - Targets pores without drying',
+                    'Kiehl\'s Ultra Facial Cream - Hydrates without greasiness',
+                    'The Ordinary "Buffet" - Multi-target hydration'
+                ],
+                routine: '🔄 Balance cleanser → 🎯 Target treatment areas → 💧 Lightweight moisturizer'
+            },
+            'Sensitive Skin': {
+                description: 'Easily irritated, prone to redness and reactions',
+                symptoms: ['Redness', 'Itching', 'Burning sensation', 'Reacts to products'],
+                products: [
+                    'Avene Tolerance Control Soothing Cream - Instant relief',
+                    'La Roche-Posay Toleriane Cleanser - Ultra gentle',
+                    'CeraVe Hydrating Mineral Sunscreen - Physical SPF protection',
+                    'The Ordinary Azelaic Acid - Reduces redness gently'
+                ],
+                routine: '🔄 Ultra-gentle cleanse → 🧴 Soothing cream → 🛡️ Mineral sunscreen'
+            }
+        };
+
+        // Initialize camera
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: 400, 
+                        height: 400,
+                        facingMode: 'user' 
+                    } 
+                });
+                webcamElement.srcObject = stream;
+                analyzeBtn.disabled = false;
+                showMessage('✅ Camera ready! Position your face and click "Analyze My Skin"', 'success');
+            } catch (err) {
+                showMessage('❌ Error accessing camera. Please allow camera permissions and refresh.', 'error');
+            }
+        }
+
+        // Analyze skin (simulated AI)
+        async function analyzeSkin() {
+            loadingElement.style.display = 'block';
+            analyzeBtn.disabled = true;
+            
+            // Simulate AI processing
+            setTimeout(() => {
+                const conditions = Object.keys(skinConditions);
+                const randomCondition = conditions[Math.floor(Math.random() * conditions.length)];
+                displayResults(randomCondition);
+                loadingElement.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }, 3000);
+        }
+
+        // Display analysis results
+        function displayResults(condition) {
+            const conditionData = skinConditions[condition];
+            
+            resultElement.innerHTML = `
+                <div class="result-box">
+                    <h2>🎯 Your Skin Analysis Results</h2>
+                    <div class="skin-type">${condition}</div>
+                    <p><strong>Description:</strong> ${conditionData.description}</p>
+                    <p><strong>Common Signs:</strong> ${conditionData.symptoms.join(', ')}</p>
+                    <p><strong>Recommended Routine:</strong><br>${conditionData.routine}</p>
+                    <p><em>💡 Note: This is a demo version. Real AI camera analysis coming soon!</em></p>
+                </div>
+            `;
+
+            showRecommendations(condition);
+        }
+
+        // Show product recommendations
+        function showRecommendations(condition) {
+            const products = skinConditions[condition].products;
+            
+            let productsHTML = `
+                <div class="result-box">
+                    <h3>💎 Recommended Products for You</h3>
+                    <p>Based on your skin analysis, these products would work well:</p>
+            `;
+            
+            products.forEach(product => {
+                const [name, description] = product.split(' - ');
+                productsHTML += `
+                    <div class="product">
+                        <strong>${name}</strong><br>
+                        <em>${description}</em>
+                    </div>
+                `;
+            });
+            
+            // Add affiliate note
+            productsHTML += `
+                <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 10px;">
+                    <strong>💰 Pro Tip:</strong> When you're ready, we'll add direct purchase links where you can buy these products!
+                </div>
+            </div>
+            `;
+            
+            recommendationsElement.innerHTML = productsHTML;
+        }
+
+        // Helper function to show messages
+        function showMessage(message, type) {
+            resultElement.innerHTML = `
+                <div class="result-box" style="background: ${type === 'error' ? 'rgba(255,100,100,0.2)' : 'rgba(100,255,100,0.2)'}">
+                    <p>${message}</p>
+                </div>
             `;
         }
+
+        // Initial welcome message
+        window.onload = function() {
+            resultElement.innerHTML = `
+                <div class="result-box">
+                    <h3>👋 Welcome to GlowGuide AI!</h3>
+                    <p>Get instant skin analysis and personalized recommendations:</p>
+                    <ol style="text-align: left; margin: 15px 0;">
+                        <li>Click "Start Camera" and allow access</li>
+                        <li>Position your face clearly in frame</li>
+                        <li>Click "Analyze My Skin"</li>
+                        <li>Get your personalized skin report!</li>
+                    </ol>
+                    <p><strong>Ready to discover your perfect skincare routine?</strong></p>
+                </div>
+            `;
+        };
     </script>
 </body>
 </html>
