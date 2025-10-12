@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GlowGuide AI - Free Skin Analysis</title>
+    <title>GlowGuide AI - Real AI Skin Analysis</title>
     <style>
         * {
             margin: 0;
@@ -42,9 +42,12 @@
             border-radius: 15px;
             margin: 20px 0;
         }
-        video {
-            width: 100%;
-            max-width: 400px;
+        #video-container {
+            position: relative;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        canvas {
             border: 3px solid white;
             border-radius: 10px;
             background: black;
@@ -100,13 +103,18 @@
             margin: 10px 0;
             font-weight: bold;
         }
+        .confidence-display {
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
         .disclaimer {
             font-size: 12px;
             opacity: 0.8;
             margin-top: 30px;
         }
         .loading {
-            display: none;
             font-size: 18px;
             margin: 20px 0;
         }
@@ -127,61 +135,76 @@
             border-radius: 10px;
             margin: 10px 0;
         }
+        .prediction-display {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            min-height: 60px;
+        }
     </style>
+    
+    <!-- p5.js and ml5.js -->
+    <script src="https://cdn.jsdelivr.net/npm/p5@latest/lib/p5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/p5@latest/lib/addons/p5.dom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ml5@latest/dist/ml5.min.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>✨ GlowGuide AI ✨</h1>
-            <p>Free Instant Skin Analysis & Personalized Recommendations</p>
+            <p>Real AI Skin Analysis & Personalized Recommendations</p>
             <div class="user-count">
-                <strong>🚀 Join 500+ users improving their skin!</strong>
+                <strong>🚀 Powered by p5.js + ml5.js Neural Network</strong>
             </div>
         </div>
 
         <div class="feature-grid">
             <div class="feature">
-                <h3>🔍 AI Analysis</h3>
-                <p>Smart skin assessment</p>
+                <h3>🧠 Real AI</h3>
+                <p>ml5.js neural network</p>
             </div>
             <div class="feature">
                 <h3>💎 Personalized</h3>
                 <p>Custom recommendations</p>
             </div>
             <div class="feature">
-                <h3>🆓 100% Free</h3>
-                <p>No payments required</p>
+                <h3>🎯 Live Analysis</h3>
+                <p>Real-time detection</p>
             </div>
             <div class="feature">
                 <h3>🔒 Private</h3>
-                <p>We don't store your photos</p>
+                <p>No data stored</p>
             </div>
         </div>
 
         <div class="camera-box">
-            <h3>📷 Step 1: Start Camera</h3>
-            <video id="webcam" autoplay playsinline></video>
+            <h3>📷 AI Skin Analysis</h3>
+            <div id="video-container"></div>
+            <div class="prediction-display" id="prediction-display">
+                <p>AI analysis will appear here...</p>
+            </div>
             <div class="buttons">
-                <button onclick="initCamera()">🎥 Start Camera</button>
-                <button onclick="analyzeSkin()" id="analyzeBtn" disabled>🔍 Analyze My Skin</button>
+                <button onclick="startAnalysis()" id="startBtn">🎥 Start AI Analysis</button>
                 <button onclick="shareApp()" class="secondary-btn">📤 Share This App</button>
             </div>
         </div>
 
         <div class="loading" id="loading">
-            🔬 AI is analyzing your skin... (3-5 seconds)
+            🔬 Loading AI Model... Please allow camera access
         </div>
 
         <div id="result"></div>
         <div id="recommendations"></div>
 
         <div class="result-box">
-            <h3>💡 Tips for Best Results</h3>
+            <h3>💡 Tips for Best AI Results</h3>
             <ul style="text-align: left; margin: 15px;">
                 <li>Use good lighting facing your face</li>
                 <li>Remove makeup for accurate analysis</li>
                 <li>Take photo in natural light if possible</li>
                 <li>Keep face centered in frame</li>
+                <li>Stay still during analysis for best accuracy</li>
             </ul>
         </div>
 
@@ -192,16 +215,21 @@
     </div>
 
     <script>
-        const webcamElement = document.getElementById('webcam');
-        const resultElement = document.getElementById('result');
-        const recommendationsElement = document.getElementById('recommendations');
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        const loadingElement = document.getElementById('loading');
+        // Global variables
+        let classifier;
+        let video;
+        let flippedVideo;
+        let currentLabel = "";
+        let currentConfidence = 0;
+        let isAnalyzing = false;
 
-        // Enhanced skin analysis database
+        // REPLACE THIS WITH YOUR ACTUAL MODEL URL
+        let imageModelURL = 'https://teachablemachine.withgoogle.com/models/YOUR_MODEL_ID/';
+
+        // Skin analysis database - MATCH YOUR AI MODEL CLASSES
         const skinConditions = {
-            'Acne-Prone Skin': {
-                description: 'Shows signs of breakouts, redness, and inflammation. Common in teenagers and young adults.',
+            'Acne Skin': {
+                description: 'AI detected signs of breakouts, redness, and inflammation.',
                 symptoms: ['Pimples', 'Blackheads', 'Redness', 'Oily T-zone', 'Inflammation'],
                 products: [
                     'CeraVe SA Cleanser - With Salicylic Acid to unclog pores',
@@ -219,7 +247,7 @@
                 ]
             },
             'Dry Skin': {
-                description: 'Shows signs of flakiness, tightness, and dehydration. Lacks natural oils.',
+                description: 'AI detected signs of flakiness, tightness, and dehydration.',
                 symptoms: ['Flaky patches', 'Tight feeling', 'Rough texture', 'Redness', 'Itching'],
                 products: [
                     'La Roche-Posay Lipikar Moisturizer - Intense 24h hydration',
@@ -236,105 +264,163 @@
                     'Avoid harsh alcohol-based products'
                 ]
             },
-            'Combination Skin': {
-                description: 'Oily in T-zone (forehead, nose, chin), dry/normal on cheeks. Most common skin type.',
-                symptoms: ['Oily forehead/nose', 'Dry cheeks', 'Visible pores in T-zone', 'Variable texture'],
+            'Oily Skin': {
+                description: 'AI detected excess sebum production and shiny appearance.',
+                symptoms: ['Shiny appearance', 'Large pores', 'Greasy feel', 'Frequent breakouts'],
                 products: [
-                    'Cetaphil Gentle Cleanser - Balances all skin types',
-                    'Paula\'s Choice 2% BHA Liquid - Targets pores without drying',
-                    'Kiehl\'s Ultra Facial Cream - Hydrates without greasiness',
-                    'The Ordinary "Buffet" - Multi-target hydration serum',
-                    'Biore Charcoal Cleanser - Deep cleans oily areas'
+                    'Neutrogena Oil-Free Cleanser - Removes excess oil',
+                    'The Ordinary Salicylic Acid Masque - Deep cleans pores',
+                    'La Roche-Posay Matte Moisturizer - Oil-free hydration',
+                    'Biore Charcoal Cleanser - Deep cleans oily areas',
+                    'Innisfree No-Sebum Mineral Powder - Controls shine'
                 ],
-                routine: '🔄 Balance cleanser → 🎯 BHA on T-zone only → 💧 Lightweight moisturizer → 🛡️ Matte sunscreen',
+                routine: '🔄 Oil-control cleanser → 🎯 Salicylic acid treatment → 💧 Oil-free moisturizer → 🛡️ Matte sunscreen',
                 tips: [
-                    'Use different products on different face areas',
-                    'Blotting papers for midday oil control',
-                    'Apply lighter moisturizer on oily areas',
-                    'Exfoliate oily areas 2-3x weekly'
+                    'Use blotting papers throughout the day',
+                    'Avoid over-washing which can increase oil',
+                    'Choose gel-based products over creams',
+                    'Clay masks 1-2 times per week'
                 ]
             },
-            'Sensitive Skin': {
-                description: 'Easily irritated, prone to redness and reactions. Needs gentle care.',
-                symptoms: ['Redness', 'Itching', 'Burning sensation', 'Reacts to products', 'Visible capillaries'],
+            'Normal Skin': {
+                description: 'AI detected balanced, healthy skin with few concerns.',
+                symptoms: ['Even tone', 'Smooth texture', 'Few breakouts', 'Comfortable feel'],
                 products: [
-                    'Avene Tolerance Control Soothing Cream - Instant relief for reactions',
-                    'La Roche-Posay Toleriane Cleanser - Ultra gentle formula',
-                    'CeraVe Hydrating Mineral Sunscreen - Physical SPF protection',
-                    'The Ordinary Azelaic Acid - Reduces redness gently',
-                    'Vanicream Moisturizer - Free of common irritants'
+                    'Cetaphil Gentle Cleanser - Maintains skin balance',
+                    'The Ordinary "Buffet" - Multi-target serum for prevention',
+                    'Kiehl\'s Ultra Facial Cream - Lightweight all-day hydration',
+                    'La Roche-Posay Toleriane Moisturizer - Maintains skin health',
+                    'COSRX Snail Mucin Essence - Boosts hydration and repair'
                 ],
-                routine: '🔄 Ultra-gentle cleanse → 🧴 Soothing cream → 🛡️ Mineral sunscreen → 🌙 Repair overnight',
+                routine: '🔄 Gentle cleanse → 💎 Preventive serum → 💧 Light moisturizer → 🛡️ Daily sunscreen',
                 tips: [
-                    'Always patch test new products',
-                    'Stick to fragrance-free formulas',
-                    'Use physical sunscreen instead of chemical',
-                    'Introduce one new product at a time'
+                    'Maintain your current routine',
+                    'Focus on prevention and protection',
+                    'Don\'t over-complicate your routine',
+                    'Regular sunscreen is your best defense'
                 ]
             }
         };
 
-        // Initialize camera
-        async function initCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        width: 400, 
-                        height: 400,
-                        facingMode: 'user' 
-                    } 
-                });
-                webcamElement.srcObject = stream;
-                analyzeBtn.disabled = false;
-                showMessage('✅ Camera ready! Position your face clearly and click "Analyze My Skin"', 'success');
-            } catch (err) {
-                showMessage('❌ Error accessing camera. Please allow camera permissions and refresh.', 'error');
-            }
+        // p5.js setup function
+        function setup() {
+            // This will be called by p5.js automatically
+            console.log("p5.js setup complete");
         }
 
-        // Analyze skin (enhanced simulation)
-        async function analyzeSkin() {
+        // Start AI Analysis
+        function startAnalysis() {
+            const startBtn = document.getElementById('startBtn');
+            const loadingElement = document.getElementById('loading');
+            
+            startBtn.disabled = true;
+            startBtn.innerHTML = '🔄 Starting...';
             loadingElement.style.display = 'block';
-            analyzeBtn.disabled = true;
-            
-            // Simulate AI processing with progress
-            let dots = '';
-            const loadingInterval = setInterval(() => {
-                dots = dots.length < 3 ? dots + '.' : '';
-                loadingElement.textContent = `🔬 AI is analyzing your skin${dots}`;
-            }, 500);
-            
-            setTimeout(() => {
-                clearInterval(loadingInterval);
-                const conditions = Object.keys(skinConditions);
-                const randomCondition = conditions[Math.floor(Math.random() * conditions.length)];
-                displayResults(randomCondition);
-                loadingElement.style.display = 'none';
-                analyzeBtn.disabled = false;
-                
-                // Track "analysis" (simulated)
-                if (localStorage.getItem('analysisCount')) {
-                    let count = parseInt(localStorage.getItem('analysisCount'));
-                    localStorage.setItem('analysisCount', count + 1);
-                } else {
-                    localStorage.setItem('analysisCount', '1');
-                }
-                
-            }, 3500);
+
+            // Initialize p5.js sketch
+            initializeSketch();
         }
 
-        // Display analysis results
-        function displayResults(condition) {
-            const conditionData = skinConditions[condition];
+        // Initialize p5.js sketch
+        function initializeSketch() {
+            // Create p5.js instance
+            new p5(function(p) {
+                p.preload = function() {
+                    // Load your trained AI model
+                    classifier = ml5.imageClassifier(imageModelURL + 'model.json');
+                    document.getElementById('loading').innerHTML = '🔬 Loading AI Model...';
+                };
+
+                p.setup = function() {
+                    const canvas = p.createCanvas(400, 300);
+                    canvas.parent('video-container');
+                    
+                    // Create the video
+                    video = p.createCapture(p.VIDEO);
+                    video.size(400, 300);
+                    video.hide();
+
+                    document.getElementById('loading').innerHTML = '🎯 AI Model Loaded! Analyzing your skin...';
+                    
+                    // Start classifying
+                    classifyVideo();
+                    
+                    // Enable button
+                    document.getElementById('startBtn').innerHTML = '✅ AI Analysis Active';
+                };
+
+                p.draw = function() {
+                    p.background(0);
+                    // Draw the flipped video
+                    p.translate(p.width, 0);
+                    p.scale(-1, 1);
+                    p.image(video, 0, 0, p.width, p.height);
+                };
+
+                // Get a prediction for the current video frame
+                function classifyVideo() {
+                    if (!classifier) return;
+                    
+                    flippedVideo = ml5.flipImage(video);
+                    classifier.classify(flippedVideo, gotResult);
+                }
+
+                // When we get a result
+                function gotResult(error, results) {
+                    if (error) {
+                        console.error(error);
+                        document.getElementById('prediction-display').innerHTML = 
+                            '<p>❌ AI Analysis Error. Please refresh and try again.</p>';
+                        return;
+                    }
+                    
+                    // The results are in an array ordered by confidence
+                    currentLabel = results[0].label;
+                    currentConfidence = results[0].confidence;
+                    
+                    // Update prediction display
+                    updatePredictionDisplay();
+                    
+                    // Update main results if confidence is high
+                    if (currentConfidence > 0.7) {
+                        displayRealResults(currentLabel, currentConfidence);
+                    }
+                    
+                    // Continue classifying
+                    classifyVideo();
+                }
+            });
+        }
+
+        // Update the prediction display
+        function updatePredictionDisplay() {
+            const confidencePercent = (currentConfidence * 100).toFixed(1);
+            const display = document.getElementById('prediction-display');
             
+            display.innerHTML = `
+                <h4>🎯 Live AI Detection:</h4>
+                <div class="confidence-display">
+                    <strong>${currentLabel}</strong><br>
+                    <span>Confidence: ${confidencePercent}%</span>
+                </div>
+            `;
+        }
+
+        // Display AI analysis results
+        function displayRealResults(skinType, confidence) {
+            const conditionData = skinConditions[skinType] || skinConditions['Normal Skin'];
+            const confidencePercent = (confidence * 100).toFixed(1);
+            
+            const resultElement = document.getElementById('result');
             resultElement.innerHTML = `
                 <div class="result-box">
-                    <h2>🎯 Your Skin Analysis Results</h2>
-                    <div class="skin-type">${condition}</div>
+                    <h2>🎯 AI Skin Analysis Complete!</h2>
+                    <div class="skin-type">${skinType}</div>
+                    <p><strong>AI Confidence:</strong> ${confidencePercent}%</p>
                     <p><strong>Description:</strong> ${conditionData.description}</p>
-                    <p><strong>Common Signs:</strong> ${conditionData.symptoms.join(', ')}</p>
+                    <p><strong>Detected Signs:</strong> ${conditionData.symptoms.join(', ')}</p>
                     
-                    <h3 style="margin-top: 20px;">📋 Recommended Routine</h3>
+                    <h3 style="margin-top: 20px;">📋 Your Custom Routine</h3>
                     <p>${conditionData.routine}</p>
                     
                     <h3 style="margin-top: 20px;">💡 Expert Tips</h3>
@@ -342,21 +428,24 @@
                         ${conditionData.tips.map(tip => `<li>${tip}</li>`).join('')}
                     </ul>
                     
-                    <p style="margin-top: 15px;"><em>💫 Real AI analysis coming soon with camera detection!</em></p>
+                    <p style="margin-top: 15px; background: rgba(100,255,100,0.2); padding: 10px; border-radius: 5px;">
+                        ✅ <strong>Real AI Analysis:</strong> Powered by ml5.js neural network!
+                    </p>
                 </div>
             `;
 
-            showRecommendations(condition);
+            showRecommendations(skinType);
         }
 
         // Show product recommendations
-        function showRecommendations(condition) {
-            const products = skinConditions[condition].products;
+        function showRecommendations(skinType) {
+            const conditionData = skinConditions[skinType] || skinConditions['Normal Skin'];
+            const products = conditionData.products;
             
             let productsHTML = `
                 <div class="result-box">
-                    <h3>💎 Recommended Products</h3>
-                    <p>These products work well for <strong>${condition}</strong>:</p>
+                    <h3>💎 Recommended Products for ${skinType}</h3>
+                    <p>These products work well for your skin type:</p>
             `;
             
             products.forEach(product => {
@@ -371,76 +460,50 @@
             productsHTML += `
                 <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 10px;">
                     <strong>🛒 Where to buy:</strong> Available at Amazon, Sephora, Ulta, or your local pharmacy.
-                    <br><strong>💡 Tip:</strong> Always patch test new products first!
                 </div>
             </div>
             `;
             
-            recommendationsElement.innerHTML = productsHTML;
-            
-            // Show share encouragement
-            setTimeout(() => {
-                showMessage('🌟 Love your results? Share this app with friends!', 'success');
-            }, 1000);
+            document.getElementById('recommendations').innerHTML = productsHTML;
         }
 
         // Share function
         function shareApp() {
+            const shareUrl = 'https://allyguuu.github.io/skin-ai/';
+            const shareText = 'Check out this amazing AI skin analysis app! It uses real neural networks to analyze your skin.';
+            
             if (navigator.share) {
                 navigator.share({
-                    title: 'GlowGuide AI - Free Skin Analysis',
-                    text: 'Check out this amazing free AI skin analysis app! It gave me personalized recommendations.',
-                    url: 'https://allyguuu.github.io/skin-ai/'
+                    title: 'GlowGuide AI - Real AI Skin Analysis',
+                    text: shareText,
+                    url: shareUrl
                 });
             } else {
-                // Fallback
-                const shareUrl = 'https://allyguuu.github.io/skin-ai/';
                 navigator.clipboard.writeText(shareUrl).then(() => {
-                    showMessage('📋 Link copied to clipboard! Share: ' + shareUrl, 'success');
+                    alert('📋 Link copied to clipboard! Share: ' + shareUrl);
                 });
             }
         }
 
-        // Helper function to show messages
-        function showMessage(message, type) {
-            resultElement.innerHTML = `
-                <div class="result-box" style="background: ${type === 'error' ? 'rgba(255,100,100,0.2)' : 'rgba(100,255,100,0.2)'}">
-                    <p>${message}</p>
-                </div>
-            ` + resultElement.innerHTML;
-        }
-
         // Initial welcome message
         window.onload = function() {
-            const analysisCount = localStorage.getItem('analysisCount') || '0';
-            const userCount = 500 + parseInt(analysisCount); // Simulated growing user base
-            
-            document.querySelector('.user-count').innerHTML = 
-                `<strong>🚀 Join ${userCount}+ users improving their skin!</strong>`;
-                
-            resultElement.innerHTML = `
+            document.getElementById('result').innerHTML = `
                 <div class="result-box">
                     <h3>👋 Welcome to GlowGuide AI!</h3>
-                    <p>Get instant skin analysis and personalized recommendations. <strong>100% FREE</strong> - no signup required!</p>
+                    <p>This app uses <strong>real AI powered by p5.js and ml5.js</strong> to analyze your skin and provide personalized recommendations.</p>
                     
                     <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin: 15px 0;">
-                        <h4>🎯 What You'll Get:</h4>
+                        <h4>🎯 How It Works:</h4>
                         <ul style="text-align: left; margin: 10px;">
-                            <li>Personalized skin type analysis</li>
-                            <li>Customized product recommendations</li>
-                            <li>Daily skincare routine</li>
-                            <li>Expert tips for your skin concerns</li>
+                            <li>Click <strong>"Start AI Analysis"</strong> to load the neural network</li>
+                            <li>Allow camera access when prompted</li>
+                            <li>Position your face clearly in the frame</li>
+                            <li>Watch real-time AI analysis of your skin</li>
+                            <li>Get personalized product recommendations</li>
                         </ul>
                     </div>
                     
-                    <ol style="text-align: left; margin: 15px 0;">
-                        <li>Click <strong>"Start Camera"</strong> and allow access</li>
-                        <li>Position your face clearly in frame with good lighting</li>
-                        <li>Click <strong>"Analyze My Skin"</strong></li>
-                        <li>Get your personalized skin report in seconds!</li>
-                    </ol>
-                    
-                    <p><strong>Ready to discover your perfect skincare routine? Let's begin! 🚀</strong></p>
+                    <p><strong>Ready to discover what AI says about your skin? Click "Start AI Analysis"! 🚀</strong></p>
                 </div>
             `;
         };
