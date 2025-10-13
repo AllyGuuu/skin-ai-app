@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GlowGuide AI - Real AI Skin Analysis</title>
+    <title>GlowGuide AI - Professional Skin Analysis</title>
     <style>
         * {
             margin: 0;
@@ -18,7 +18,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             text-align: center;
         }
@@ -104,7 +104,7 @@
         }
         .result-box {
             background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
+            padding: 25px;
             border-radius: 15px;
             margin: 20px 0;
             text-align: left;
@@ -112,21 +112,23 @@
         .product {
             background: white;
             color: #333;
-            margin: 10px 0;
-            padding: 15px;
+            margin: 15px 0;
+            padding: 20px;
             border-radius: 10px;
+            border-left: 5px solid #ff6b6b;
         }
         .skin-type {
             display: inline-block;
-            padding: 8px 20px;
+            padding: 10px 25px;
             background: #ff6b6b;
-            border-radius: 20px;
+            border-radius: 25px;
             margin: 10px 0;
             font-weight: bold;
+            font-size: 1.2em;
         }
         .confidence-display {
             background: rgba(255,255,255,0.2);
-            padding: 10px;
+            padding: 12px;
             border-radius: 10px;
             margin: 10px 0;
         }
@@ -173,39 +175,83 @@
             border-radius: 10px;
             margin: 10px 0;
         }
+        .routine-step {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .step-number {
+            background: #4CAF50;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .ingredient-highlight {
+            background: rgba(255,107,107,0.3);
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .product-category {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+        }
+        .urgency-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #ff4757;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .priority-high {
+            background: #ff4757;
+        }
+        .priority-medium {
+            background: #ffa502;
+        }
+        .priority-low {
+            background: #2ed573;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>✨ GlowGuide AI ✨</h1>
-            <p>Real AI Skin Analysis & Personalized Recommendations</p>
+            <p>Professional Skin Analysis & Personalized Routine</p>
             <div class="user-count">
-                <strong>🚀 Powered by Real AI - Model Ready!</strong>
+                <strong>🚀 Powered by Real AI - Advanced Recommendations</strong>
             </div>
         </div>
 
         <div class="success-message">
             <h3>✅ AI Model Connected!</h3>
-            <p>Your personal skin analysis AI is ready to use. Click "Start Camera" below!</p>
+            <p>Your personal skin analysis AI is ready to provide professional-grade recommendations.</p>
         </div>
 
         <div class="feature-grid">
             <div class="feature">
-                <h3>🧠 Real AI</h3>
-                <p>Trained neural network</p>
+                <h3>🧠 Smart AI</h3>
+                <p>Advanced skin analysis</p>
             </div>
             <div class="feature">
-                <h3>💎 Personalized</h3>
-                <p>Custom recommendations</p>
+                <h3>💎 Custom Routine</h3>
+                <p>Step-by-step application</p>
             </div>
             <div class="feature">
-                <h3>🎯 Live Analysis</h3>
-                <p>Real-time detection</p>
+                <h3>🎯 Targeted Solutions</h3>
+                <p>Ingredient-specific</p>
             </div>
             <div class="feature">
-                <h3>🔒 Private</h3>
-                <p>No data stored</p>
+                <h3>📊 Professional Grade</h3>
+                <p>Dermatologist-inspired</p>
             </div>
         </div>
 
@@ -220,7 +266,7 @@
             </div>
             
             <div class="prediction-display" id="prediction-display">
-                <p>Click "Start Camera" to begin analysis</p>
+                <p>Click "Start Camera" to begin professional analysis</p>
             </div>
             
             <div class="buttons">
@@ -265,75 +311,415 @@
         let isAnalyzing = false;
         let analysisInterval;
 
-        // ✅ YOUR ACTUAL MODEL URL - Ready to use!
+        // ✅ YOUR ACTUAL MODEL URL
         const modelURL = 'https://teachablemachine.withgoogle.com/models/XmgPTvPSp/model.json';
         const metadataURL = 'https://teachablemachine.withgoogle.com/models/XmgPTvPSp/metadata.json';
 
-        // Skin analysis database - Make sure these match your model's class names
+        // Enhanced skin analysis database with professional recommendations
         const skinConditions = {
             'Acne Skin': {
-                description: 'AI detected signs of breakouts, redness, and inflammation.',
-                symptoms: ['Pimples', 'Blackheads', 'Redness', 'Oily T-zone', 'Inflammation'],
-                products: [
-                    'CeraVe SA Cleanser - With Salicylic Acid to unclog pores',
-                    'The Ordinary Niacinamide 10% + Zinc 1% - Reduces inflammation and oil',
-                    'La Roche-Posay Effaclar Duo - Targets acne and post-acne marks',
-                    'Neutrogena Oil-Free Acne Wash - Daily prevention wash'
+                description: 'AI detected active breakouts, inflammation, and congestion. Focus on clearing current acne while preventing future breakouts.',
+                primaryConcerns: ['Active breakouts', 'Inflammation', 'Excess oil', 'Clogged pores'],
+                severityLevel: 'High',
+                morningRoutine: [
+                    {
+                        step: 1,
+                        product: 'CeraVe SA Renewing Cleanser',
+                        type: 'Cleanser',
+                        ingredients: ['Salicylic Acid 0.5%', 'Niacinamide', 'Ceramides'],
+                        purpose: 'Deep clean pores and reduce inflammation',
+                        application: 'Massage onto damp skin for 60 seconds, then rinse',
+                        priority: 'high'
+                    },
+                    {
+                        step: 2,
+                        product: 'The Ordinary Niacinamide 10% + Zinc 1%',
+                        type: 'Treatment Serum',
+                        ingredients: ['Niacinamide 10%', 'Zinc PCA 1%'],
+                        purpose: 'Control oil production and reduce redness',
+                        application: 'Apply 3-4 drops to entire face, let absorb for 2 minutes',
+                        priority: 'high'
+                    },
+                    {
+                        step: 3,
+                        product: 'La Roche-Posay Effaclar Duo+',
+                        type: 'Treatment Cream',
+                        ingredients: ['Salicylic Acid', 'LHA', 'Niacinamide'],
+                        purpose: 'Target active breakouts and prevent new ones',
+                        application: 'Apply thin layer to affected areas only',
+                        priority: 'high'
+                    },
+                    {
+                        step: 4,
+                        product: 'Neutrogena Oil-Free Moisture with SPF 35',
+                        type: 'Moisturizer + SPF',
+                        ingredients: ['SPF 35', 'Glycerin', 'Dimethicone'],
+                        purpose: 'Hydrate without clogging pores + sun protection',
+                        application: 'Apply evenly to face and neck',
+                        priority: 'medium'
+                    }
                 ],
-                routine: '🔄 Cleanse twice daily → 🧴 Apply serum → 💧 Oil-free moisturizer → 🛡️ Sunscreen',
-                tips: [
-                    'Avoid touching your face throughout the day',
-                    'Change pillowcases weekly',
-                    'Use non-comedogenic products only'
-                ]
+                eveningRoutine: [
+                    {
+                        step: 1,
+                        product: 'CeraVe Foaming Facial Cleanser',
+                        type: 'Cleanser',
+                        ingredients: ['Ceramides', 'Hyaluronic Acid', 'Niacinamide'],
+                        purpose: 'Remove makeup, oil, and impurities',
+                        application: 'Double cleanse if wearing makeup/sunscreen',
+                        priority: 'high'
+                    },
+                    {
+                        step: 2,
+                        product: 'Paula\'s Choice 2% BHA Liquid Exfoliant',
+                        type: 'Exfoliant',
+                        ingredients: ['Salicylic Acid 2%', 'Green Tea Extract'],
+                        purpose: 'Unclog pores and smooth texture',
+                        application: 'Apply with cotton pad 3x weekly, avoid daily use',
+                        priority: 'medium'
+                    },
+                    {
+                        step: 3,
+                        product: 'The Ordinary Azelaic Acid Suspension 10%',
+                        type: 'Treatment',
+                        ingredients: ['Azelaic Acid 10%'],
+                        purpose: 'Reduce redness and post-acne marks',
+                        application: 'Apply pea-sized amount to entire face',
+                        priority: 'medium'
+                    },
+                    {
+                        step: 4,
+                        product: 'La Roche-Posay Cicaplast Baume B5',
+                        type: 'Repair Balm',
+                        ingredients: ['Panthenol', 'Madecassoside', 'Shea Butter'],
+                        purpose: 'Repair skin barrier and reduce irritation',
+                        application: 'Apply as final step on irritated areas',
+                        priority: 'low'
+                    }
+                ],
+                weeklyTreatments: [
+                    {
+                        product: 'The Ordinary AHA 30% + BHA 2% Peeling Solution',
+                        frequency: 'Once weekly',
+                        purpose: 'Deep exfoliation and pore purification',
+                        warning: 'Use for max 10 minutes, avoid on active inflammation'
+                    },
+                    {
+                        product: 'COSRX Acne Pimple Master Patch',
+                        frequency: 'As needed',
+                        purpose: 'Spot treatment for active pimples',
+                        application: 'Apply on clean, dry pimples overnight'
+                    }
+                ],
+                keyIngredients: ['Salicylic Acid', 'Niacinamide', 'Azelaic Acid', 'Zinc'],
+                avoidIngredients: ['Heavy oils', 'Comedogenic ingredients', 'Fragrance'],
+                expectedResults: 'Visible reduction in breakouts within 2-4 weeks, improved texture in 6-8 weeks'
             },
+
             'Dry Skin': {
-                description: 'AI detected signs of flakiness, tightness, and dehydration.',
-                symptoms: ['Flaky patches', 'Tight feeling', 'Rough texture', 'Redness', 'Itching'],
-                products: [
-                    'La Roche-Posay Lipikar Moisturizer - Intense 24h hydration',
-                    'The Ordinary Hyaluronic Acid - Attracts and holds moisture',
-                    'CeraVe Moisturizing Cream - Repairs skin barrier',
-                    'Kiehl\'s Ultra Facial Cream - Non-greasy hydration'
+                description: 'AI detected significant dehydration, flakiness, and compromised skin barrier. Focus on intensive hydration and barrier repair.',
+                primaryConcerns: ['Dehydration', 'Flakiness', 'Tightness', 'Barrier damage'],
+                severityLevel: 'High',
+                morningRoutine: [
+                    {
+                        step: 1,
+                        product: 'La Roche-Posay Toleriane Hydrating Gentle Cleanser',
+                        type: 'Cleanser',
+                        ingredients: ['Ceramides', 'Niacinamide', 'Glycerin'],
+                        purpose: 'Gentle cleansing without stripping moisture',
+                        application: 'Massage for 30 seconds, rinse with cool water',
+                        priority: 'high'
+                    },
+                    {
+                        step: 2,
+                        product: 'The Ordinary Hyaluronic Acid 2% + B5',
+                        type: 'Hydrating Serum',
+                        ingredients: ['Hyaluronic Acid', 'Vitamin B5'],
+                        purpose: 'Intense hydration and moisture retention',
+                        application: 'Apply to damp skin, press into face',
+                        priority: 'high'
+                    },
+                    {
+                        step: 3,
+                        product: 'COSRX Advanced Snail 96 Mucin Power Essence',
+                        type: 'Essence',
+                        ingredients: ['Snail Secretion Filtrate 96%'],
+                        purpose: 'Repair and hydrate with snail mucin',
+                        application: 'Pat into skin after serum',
+                        priority: 'medium'
+                    },
+                    {
+                        step: 4,
+                        product: 'Kiehl\'s Ultra Facial Cream',
+                        type: 'Moisturizer',
+                        ingredients: ['Squalane', 'Glacial Glycoprotein', 'Glycerin'],
+                        purpose: '24-hour hydration without heaviness',
+                        application: 'Apply generous amount to face and neck',
+                        priority: 'high'
+                    },
+                    {
+                        step: 5,
+                        product: 'La Roche-Posay Anthelios Melt-in Milk Sunscreen SPF 60',
+                        type: 'Sunscreen',
+                        ingredients: ['SPF 60', 'Mexoryl XL', 'Glycerin'],
+                        purpose: 'High protection with hydrating base',
+                        application: 'Apply as final step, reapply every 2 hours',
+                        priority: 'high'
+                    }
                 ],
-                routine: '🔄 Gentle cleanser → 💦 Hydrating serum → 🧴 Rich moisturizer → 🛡️ Sunscreen',
-                tips: [
-                    'Apply moisturizer to damp skin',
-                    'Use lukewarm water instead of hot',
-                    'Add a humidifier to your room'
-                ]
+                eveningRoutine: [
+                    {
+                        step: 1,
+                        product: 'The Ordinary Squalane Cleanser',
+                        type: 'Oil Cleanser',
+                        ingredients: ['Squalane', 'Ethyl Linoleate'],
+                        purpose: 'First cleanse to remove makeup and sunscreen',
+                        application: 'Massage dry, then emulsify with water',
+                        priority: 'high'
+                    },
+                    {
+                        step: 2,
+                        product: 'CeraVe Hydrating Cream-to-Foam Cleanser',
+                        type: 'Second Cleanser',
+                        ingredients: ['Ceramides', 'Hyaluronic Acid'],
+                        purpose: 'Second cleanse without stripping',
+                        application: 'Follow oil cleanse, rinse thoroughly',
+                        priority: 'high'
+                    },
+                    {
+                        step: 3,
+                        product: 'The Ordinary "Buffet" + Copper Peptides 1%',
+                        type: 'Treatment Serum',
+                        ingredients: ['Copper Peptides', 'Multiple Peptides', 'Hyaluronic Acid'],
+                        purpose: 'Advanced anti-aging and barrier repair',
+                        application: 'Apply 1-2 droppers to face and neck',
+                        priority: 'medium'
+                    },
+                    {
+                        step: 4,
+                        product: 'Skinfix Barrier+ Triple Lipid-Peptide Cream',
+                        type: 'Night Cream',
+                        ingredients: ['Peptides', 'Ceramides', 'Fatty Acids'],
+                        purpose: 'Intensive overnight barrier repair',
+                        application: 'Apply thick layer as final step',
+                        priority: 'high'
+                    }
+                ],
+                weeklyTreatments: [
+                    {
+                        product: 'Laneige Water Sleeping Mask',
+                        frequency: '2-3 times weekly',
+                        purpose: 'Overnight intensive hydration boost',
+                        application: 'Apply as final step instead of night cream'
+                    },
+                    {
+                        product: 'The Ordinary 100% Plant-Derived Squalane',
+                        frequency: 'As needed',
+                        purpose: 'Extra hydration for very dry areas',
+                        application: 'Mix 2-3 drops with moisturizer'
+                    }
+                ],
+                keyIngredients: ['Hyaluronic Acid', 'Ceramides', 'Squalane', 'Peptides'],
+                avoidIngredients: ['Alcohol', 'Fragrance', 'Strong exfoliants', 'Foaming cleansers'],
+                expectedResults: 'Improved hydration within 1 week, barrier repair in 2-4 weeks, reduced flakiness in 3-6 weeks'
             },
+
             'Oily Skin': {
-                description: 'AI detected excess sebum production and shiny appearance.',
-                symptoms: ['Shiny appearance', 'Large pores', 'Greasy feel', 'Frequent breakouts'],
-                products: [
-                    'Neutrogena Oil-Free Cleanser - Removes excess oil',
-                    'The Ordinary Salicylic Acid - Deep cleans pores',
-                    'La Roche-Posay Matte Moisturizer - Oil-free hydration',
-                    'Biore Charcoal Cleanser - Deep cleans oily areas'
+                description: 'AI detected excess sebum production, enlarged pores, and shine. Focus on oil control while maintaining hydration balance.',
+                primaryConcerns: ['Excess oil', 'Enlarged pores', 'Shine', 'Breakouts'],
+                severityLevel: 'Medium',
+                morningRoutine: [
+                    {
+                        step: 1,
+                        product: 'CeraVe Foaming Facial Cleanser',
+                        type: 'Cleanser',
+                        ingredients: ['Niacinamide', 'Ceramides', 'Hyaluronic Acid'],
+                        purpose: 'Remove excess oil without over-drying',
+                        application: 'Focus on T-zone, rinse thoroughly',
+                        priority: 'high'
+                    },
+                    {
+                        step: 2,
+                        product: 'The Ordinary Niacinamide 10% + Zinc 1%',
+                        type: 'Treatment Serum',
+                        ingredients: ['Niacinamide 10%', 'Zinc PCA 1%'],
+                        purpose: 'Control sebum production and minimize pores',
+                        application: 'Apply to entire face, focus on oily areas',
+                        priority: 'high'
+                    },
+                    {
+                        step: 3,
+                        product: 'La Roche-Posay Effaclar Mat Oil-Free Moisturizer',
+                        type: 'Moisturizer',
+                        ingredients: ['Sebulyse Technology', 'Airlicium'],
+                        purpose: 'Mattifying hydration with pore refinement',
+                        application: 'Apply thin layer to entire face',
+                        priority: 'medium'
+                    },
+                    {
+                        step: 4,
+                        product: 'Supergoop! Unseen Sunscreen SPF 40',
+                        type: 'Sunscreen',
+                        ingredients: ['SPF 40', 'Red Algae', 'Frankincense'],
+                        purpose: 'Weightless, invisible protection',
+                        application: 'Apply as final step, perfect under makeup',
+                        priority: 'high'
+                    }
                 ],
-                routine: '🔄 Oil-control cleanser → 🎯 Treatment → 💧 Oil-free moisturizer → 🛡️ Sunscreen',
-                tips: [
-                    'Use blotting papers throughout the day',
-                    'Avoid over-washing',
-                    'Choose gel-based products'
-                ]
+                eveningRoutine: [
+                    {
+                        step: 1,
+                        product: 'The Inkey List Oat Cleansing Balm',
+                        type: 'First Cleanser',
+                        ingredients: ['Oat Kernel Oil', 'Squalane'],
+                        purpose: 'Gentle makeup and sunscreen removal',
+                        application: 'Massage dry, emulsify with water',
+                        priority: 'high'
+                    },
+                    {
+                        step: 2,
+                        product: 'Paula\'s Choice Pore Normalizing Cleanser',
+                        type: 'Second Cleanser',
+                        ingredients: ['Ceramides', 'Chamomile', 'Green Tea'],
+                        purpose: 'Deep clean pores and balance oil',
+                        application: 'Follow balm cleanse, focus on pores',
+                        priority: 'high'
+                    },
+                    {
+                        step: 3,
+                        product: 'The Ordinary Salicylic Acid 2% Masque',
+                        type: 'Treatment (2x weekly)',
+                        ingredients: ['Salicylic Acid 2%', 'Charcoal', 'Clay'],
+                        purpose: 'Deep pore cleansing and oil control',
+                        application: 'Apply 1-2x weekly for 10 minutes',
+                        priority: 'medium'
+                    },
+                    {
+                        step: 4,
+                        product: 'Kiehl\'s Midnight Recovery Concentrate',
+                        type: 'Treatment Oil',
+                        ingredients: ['Squalane', 'Evening Primrose Oil', 'Lavender'],
+                        purpose: 'Balance oil production overnight',
+                        application: '3-4 drops pressed into skin',
+                        priority: 'low'
+                    }
+                ],
+                weeklyTreatments: [
+                    {
+                        product: 'The Ordinary AHA 30% + BHA 2% Peeling Solution',
+                        frequency: 'Once weekly',
+                        purpose: 'Deep pore purification and exfoliation',
+                        warning: 'Maximum 10 minutes, avoid if skin is irritated'
+                    },
+                    {
+                        product: 'Origins Original Skin Mask',
+                        frequency: '1-2 times weekly',
+                        purpose: 'Oil-absorbing and pore-refining',
+                        application: 'Apply for 10 minutes, then rinse'
+                    }
+                ],
+                keyIngredients: ['Niacinamide', 'Salicylic Acid', 'Zinc', 'Clay'],
+                avoidIngredients: ['Heavy oils', 'Comedogenic ingredients', 'Alcohol-based products'],
+                expectedResults: 'Reduced shine within 1 week, smaller appearing pores in 2-4 weeks, balanced oil production in 4-6 weeks'
             },
+
             'Normal Skin': {
-                description: 'AI detected balanced, healthy skin with few concerns.',
-                symptoms: ['Even tone', 'Smooth texture', 'Few breakouts', 'Comfortable feel'],
-                products: [
-                    'Cetaphil Gentle Cleanser - Maintains skin balance',
-                    'The Ordinary "Buffet" - Multi-target serum',
-                    'Kiehl\'s Ultra Facial Cream - Lightweight hydration',
-                    'La Roche-Posay Toleriane - Maintains skin health'
+                description: 'AI detected well-balanced skin with minimal concerns. Focus on maintenance, prevention, and enhancement.',
+                primaryConcerns: ['Maintenance', 'Prevention', 'Enhancement'],
+                severityLevel: 'Low',
+                morningRoutine: [
+                    {
+                        step: 1,
+                        product: 'Kiehl\'s Ultra Facial Cleanser',
+                        type: 'Cleanser',
+                        ingredients: ['Squalane', 'Avocado Oil', 'Vitamin E'],
+                        purpose: 'Gentle cleansing while maintaining balance',
+                        application: 'Massage for 30 seconds, rinse well',
+                        priority: 'medium'
+                    },
+                    {
+                        step: 2,
+                        product: 'The Ordinary "Buffet"',
+                        type: 'Multi-Technology Serum',
+                        ingredients: ['Multiple Peptides', 'Amino Acids', 'Hyaluronic Acid'],
+                        purpose: 'Comprehensive anti-aging and hydration',
+                        application: 'Apply 1 dropper to face and neck',
+                        priority: 'medium'
+                    },
+                    {
+                        step: 3,
+                        product: 'Kiehl\'s Ultra Facial Cream',
+                        type: 'Moisturizer',
+                        ingredients: ['Squalane', 'Glacial Glycoprotein'],
+                        purpose: 'Lightweight 24-hour hydration',
+                        application: 'Apply even layer to face and neck',
+                        priority: 'medium'
+                    },
+                    {
+                        step: 4,
+                        product: 'La Roche-Posay Anthelios Mineral Sunscreen SPF 50',
+                        type: 'Sunscreen',
+                        ingredients: ['SPF 50', '100% Mineral Filters', 'Cell-Ox Shield'],
+                        purpose: 'Daily broad-spectrum protection',
+                        application: 'Apply as final step, reapply as needed',
+                        priority: 'high'
+                    }
                 ],
-                routine: '🔄 Gentle cleanse → 💎 Serum → 💧 Moisturizer → 🛡️ Sunscreen',
-                tips: [
-                    'Maintain your current routine',
-                    'Focus on prevention',
-                    'Regular sunscreen is key'
-                ]
+                eveningRoutine: [
+                    {
+                        step: 1,
+                        product: 'The Ordinary Squalane Cleanser',
+                        type: 'First Cleanser',
+                        ingredients: ['Squalane', 'Lipid Compounds'],
+                        purpose: 'Thorough makeup and sunscreen removal',
+                        application: 'Massage dry, then emulsify with water',
+                        priority: 'medium'
+                    },
+                    {
+                        step: 2,
+                        product: 'CeraVe Hydrating Facial Cleanser',
+                        type: 'Second Cleanser',
+                        ingredients: ['Ceramides', 'Hyaluronic Acid'],
+                        purpose: 'Gentle second cleanse',
+                        application: 'Follow oil cleanse, rinse thoroughly',
+                        priority: 'medium'
+                    },
+                    {
+                        step: 3,
+                        product: 'The Ordinary Granactive Retinoid 2% Emulsion',
+                        type: 'Treatment (3-4x weekly)',
+                        ingredients: ['Hydroxypinacolone Retinoate', 'Coconut Alkanes'],
+                        purpose: 'Advanced anti-aging and skin renewal',
+                        application: 'Apply 3-4x weekly, build up tolerance',
+                        priority: 'medium'
+                    },
+                    {
+                        step: 4,
+                        product: 'Skinfix Barrier+ Triple Lipid-Peptide Cream',
+                        type: 'Night Cream',
+                        ingredients: ['Peptides', 'Ceramides', 'Fatty Acids'],
+                        purpose: 'Overnight repair and nourishment',
+                        application: 'Apply as final step',
+                        priority: 'medium'
+                    }
+                ],
+                weeklyTreatments: [
+                    {
+                        product: 'The Ordinary AHA 30% + BHA 2% Peeling Solution',
+                        frequency: 'Once weekly',
+                        purpose: 'Maintenance exfoliation and radiance',
+                        application: 'Apply for 10 minutes maximum'
+                    },
+                    {
+                        product: 'Summer Fridays Jet Lag Mask',
+                        frequency: '1-2 times weekly',
+                        purpose: 'Intensive hydration and glow boost',
+                        application: 'Apply thick layer for 20 minutes or overnight'
+                    }
+                ],
+                keyIngredients: ['Peptides', 'Retinoids', 'Antioxidants', 'Ceramides'],
+                avoidIngredients: ['Over-exfoliation', 'Harsh ingredients', 'Unnecessary products'],
+                expectedResults: 'Maintained skin health, prevention of aging signs, enhanced radiance and texture over time'
             }
         };
 
@@ -521,23 +907,66 @@
             const resultElement = document.getElementById('result');
             resultElement.innerHTML = `
                 <div class="result-box">
-                    <h2>🎯 AI Skin Analysis Complete!</h2>
+                    <h2>🎯 Professional Skin Analysis Complete!</h2>
                     <div class="skin-type">${skinType}</div>
                     <p><strong>AI Confidence:</strong> ${confidencePercent}%</p>
                     <p><strong>Description:</strong> ${conditionData.description}</p>
-                    <p><strong>Detected Signs:</strong> ${conditionData.symptoms.join(', ')}</p>
+                    <p><strong>Primary Concerns:</strong> ${conditionData.primaryConcerns.join(', ')}</p>
+                    <p><strong>Severity Level:</strong> ${conditionData.severityLevel}</p>
                     
-                    <h3 style="margin-top: 20px;">📋 Your Custom Routine</h3>
-                    <p>${conditionData.routine}</p>
-                    
-                    <h3 style="margin-top: 20px;">💡 Expert Tips</h3>
-                    <ul style="margin: 10px 0 10px 20px;">
-                        ${conditionData.tips.map(tip => `<li>${tip}</li>`).join('')}
-                    </ul>
-                    
-                    <p style="margin-top: 15px; background: rgba(100,255,100,0.2); padding: 10px; border-radius: 5px;">
-                        ✅ <strong>Real AI Analysis:</strong> Powered by your trained neural network!
-                    </p>
+                    <div style="margin-top: 25px;">
+                        <h3>🌅 Morning Routine (In Order)</h3>
+                        ${conditionData.morningRoutine.map(step => `
+                            <div class="routine-step">
+                                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                    <span class="step-number">${step.step}</span>
+                                    <strong>${step.product}</strong>
+                                    <span class="urgency-badge priority-${step.priority}">${step.priority.toUpperCase()}</span>
+                                </div>
+                                <p><strong>Type:</strong> ${step.type}</p>
+                                <p><strong>Key Ingredients:</strong> ${step.ingredients.map(ing => `<span class="ingredient-highlight">${ing}</span>`).join(', ')}</p>
+                                <p><strong>Purpose:</strong> ${step.purpose}</p>
+                                <p><strong>Application:</strong> ${step.application}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div style="margin-top: 25px;">
+                        <h3>🌙 Evening Routine (In Order)</h3>
+                        ${conditionData.eveningRoutine.map(step => `
+                            <div class="routine-step">
+                                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                    <span class="step-number">${step.step}</span>
+                                    <strong>${step.product}</strong>
+                                    <span class="urgency-badge priority-${step.priority}">${step.priority.toUpperCase()}</span>
+                                </div>
+                                <p><strong>Type:</strong> ${step.type}</p>
+                                <p><strong>Key Ingredients:</strong> ${step.ingredients.map(ing => `<span class="ingredient-highlight">${ing}</span>`).join(', ')}</p>
+                                <p><strong>Purpose:</strong> ${step.purpose}</p>
+                                <p><strong>Application:</strong> ${step.application}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div style="margin-top: 25px;">
+                        <h3>📆 Weekly Treatments</h3>
+                        ${conditionData.weeklyTreatments.map(treatment => `
+                            <div class="product">
+                                <strong>${treatment.product}</strong>
+                                <p><strong>Frequency:</strong> ${treatment.frequency}</p>
+                                <p><strong>Purpose:</strong> ${treatment.purpose}</p>
+                                <p><strong>Application:</strong> ${treatment.application}</p>
+                                ${treatment.warning ? `<p style="color: #ff6b6b;"><strong>⚠️ Note:</strong> ${treatment.warning}</p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div style="margin-top: 25px; background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px;">
+                        <h3>💡 Key Recommendations</h3>
+                        <p><strong>Focus on these ingredients:</strong> ${conditionData.keyIngredients.map(ing => `<span class="ingredient-highlight">${ing}</span>`).join(', ')}</p>
+                        <p><strong>Avoid these ingredients:</strong> ${conditionData.avoidIngredients.join(', ')}</p>
+                        <p><strong>Expected Results Timeline:</strong> ${conditionData.expectedResults}</p>
+                    </div>
                 </div>
             `;
 
@@ -547,28 +976,37 @@
         // Show product recommendations
         function showRecommendations(skinType) {
             const conditionData = skinConditions[skinType] || skinConditions['Normal Skin'];
-            const products = conditionData.products;
             
             let productsHTML = `
                 <div class="result-box">
-                    <h3>💎 Recommended Products for ${skinType}</h3>
-                    <p>These products work well for your skin type:</p>
-            `;
-            
-            products.forEach(product => {
-                productsHTML += `
-                    <div class="product">
-                        <strong>${product.split(' - ')[0]}</strong><br>
-                        <em>${product.split(' - ')[1]}</em>
+                    <h3>🛒 Complete Product List</h3>
+                    <p>All products mentioned in your personalized routine:</p>
+                    
+                    <div class="product-category">
+                        <h4>🧴 Daily Essentials</h4>
+                        ${[...conditionData.morningRoutine, ...conditionData.eveningRoutine].map(product => `
+                            <div class="product">
+                                <strong>${product.product}</strong>
+                                <p><em>${product.type} - ${product.purpose}</em></p>
+                                <p><strong>Key Ingredients:</strong> ${product.ingredients.join(', ')}</p>
+                            </div>
+                        `).join('')}
                     </div>
-                `;
-            });
-            
-            productsHTML += `
-                <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 10px;">
-                    <strong>🛒 Where to buy:</strong> Available at Amazon, Sephora, Ulta, or your local pharmacy.
+
+                    <div class="product-category">
+                        <h4>📆 Weekly Treatments</h4>
+                        ${conditionData.weeklyTreatments.map(treatment => `
+                            <div class="product">
+                                <strong>${treatment.product}</strong>
+                                <p><em>${treatment.frequency} - ${treatment.purpose}</em></p>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 10px;">
+                        <strong>💡 Pro Tip:</strong> Start with the high-priority products first, then gradually incorporate medium and low-priority items. Always patch test new products!
+                    </div>
                 </div>
-            </div>
             `;
             
             document.getElementById('recommendations').innerHTML = productsHTML;
@@ -577,11 +1015,11 @@
         // Share function
         function shareApp() {
             const shareUrl = 'https://allyguuu.github.io/skin-ai/';
-            const shareText = 'Check out this amazing AI skin analysis app! It uses real neural networks to analyze your skin.';
+            const shareText = 'Check out this amazing AI skin analysis app! It gives professional-grade skincare routines with step-by-step application instructions.';
             
             if (navigator.share) {
                 navigator.share({
-                    title: 'GlowGuide AI - Real AI Skin Analysis',
+                    title: 'GlowGuide AI - Professional Skin Analysis',
                     text: shareText,
                     url: shareUrl
                 });
@@ -601,21 +1039,22 @@
         window.onload = function() {
             document.getElementById('result').innerHTML = `
                 <div class="result-box">
-                    <h3>👋 Welcome to GlowGuide AI!</h3>
-                    <p>This app uses <strong>real AI powered by your trained neural network</strong> to analyze your skin and provide personalized recommendations.</p>
+                    <h3>👋 Welcome to GlowGuide AI Pro!</h3>
+                    <p>This app uses <strong>real AI to provide professional-grade skincare routines</strong> with exact application orders and ingredient-specific recommendations.</p>
                     
                     <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin: 15px 0;">
-                        <h4>🎯 How It Works:</h4>
+                        <h4>🎯 What You'll Get:</h4>
                         <ul style="text-align: left; margin: 10px;">
-                            <li>Click <strong>"Start Camera"</strong> to load the neural network</li>
-                            <li>Allow camera access when prompted</li>
-                            <li>Position your face clearly in the frame</li>
-                            <li>Click <strong>"Analyze Skin"</strong> for real-time AI analysis</li>
-                            <li>Get personalized product recommendations</li>
+                            <li><strong>Step-by-step routines</strong> (morning & evening)</li>
+                            <li><strong>Exact application order</strong> and techniques</li>
+                            <li><strong>Ingredient-focused</strong> product recommendations</li>
+                            <li><strong>Priority levels</strong> for each product</li>
+                            <li><strong>Weekly treatment</strong> schedule</li>
+                            <li><strong>Expected results</strong> timeline</li>
                         </ul>
                     </div>
                     
-                    <p><strong>Ready to discover what AI says about your skin? Click "Start Camera"! 🚀</strong></p>
+                    <p><strong>Ready for your professional skincare prescription? Click "Start Camera"! 🚀</strong></p>
                 </div>
             `;
         };
