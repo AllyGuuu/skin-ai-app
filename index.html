@@ -47,10 +47,25 @@
             display: inline-block;
             margin: 10px 0;
         }
-        #defaultCanvas0 {
+        #webcam-video {
             border: 3px solid white;
             border-radius: 10px;
             background: black;
+            width: 400px;
+            height: 300px;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror effect */
+        }
+        .camera-placeholder {
+            width: 400px;
+            height: 300px;
+            border: 3px solid white;
+            border-radius: 10px;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
         }
         .buttons {
             margin: 20px 0;
@@ -80,6 +95,12 @@
         }
         .secondary-btn:hover {
             background: #45a049;
+        }
+        .stop-btn {
+            background: #ff4757;
+        }
+        .stop-btn:hover {
+            background: #ff3742;
         }
         .result-box {
             background: rgba(255, 255, 255, 0.1);
@@ -117,6 +138,7 @@
         .loading {
             font-size: 18px;
             margin: 20px 0;
+            min-height: 30px;
         }
         .feature-grid {
             display: grid;
@@ -142,20 +164,10 @@
             margin: 10px 0;
             min-height: 60px;
         }
-        .camera-feed {
-            border: 3px solid white;
-            border-radius: 10px;
-            background: black;
-            width: 400px;
-            height: 300px;
-            object-fit: cover;
+        .hidden {
+            display: none;
         }
     </style>
-    
-    <!-- p5.js and ml5.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/addons/p5.dom.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ml5/1.0.0/ml5.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -163,14 +175,14 @@
             <h1>✨ GlowGuide AI ✨</h1>
             <p>Real AI Skin Analysis & Personalized Recommendations</p>
             <div class="user-count">
-                <strong>🚀 Powered by p5.js + ml5.js Neural Network</strong>
+                <strong>🚀 Powered by TensorFlow.js Neural Network</strong>
             </div>
         </div>
 
         <div class="feature-grid">
             <div class="feature">
                 <h3>🧠 Real AI</h3>
-                <p>ml5.js neural network</p>
+                <p>Trained neural network</p>
             </div>
             <div class="feature">
                 <h3>💎 Personalized</h3>
@@ -188,21 +200,27 @@
 
         <div class="camera-box">
             <h3>📷 AI Skin Analysis</h3>
+            
             <div id="video-container">
-                <!-- Camera will appear here -->
+                <div id="camera-placeholder" class="camera-placeholder">
+                    <p>Camera will appear here</p>
+                </div>
+                <video id="webcam-video" class="hidden" autoplay playsinline></video>
             </div>
+            
             <div class="prediction-display" id="prediction-display">
-                <p>Click "Start AI Analysis" to begin</p>
+                <p>Click "Start Camera" to begin analysis</p>
             </div>
+            
             <div class="buttons">
-                <button onclick="startCamera()" id="startBtn">🎥 Start AI Analysis</button>
-                <button onclick="shareApp()" class="secondary-btn">📤 Share This App</button>
+                <button onclick="startCamera()" id="startBtn">🎥 Start Camera</button>
+                <button onclick="stopCamera()" id="stopBtn" class="stop-btn hidden">⏹️ Stop Camera</button>
+                <button onclick="analyzeSkin()" id="analyzeBtn" disabled>🔍 Analyze Skin</button>
+                <button onclick="shareApp()" class="secondary-btn">📤 Share App</button>
             </div>
         </div>
 
-        <div class="loading" id="loading">
-            <!-- Loading messages will appear here -->
-        </div>
+        <div class="loading" id="loading"></div>
 
         <div id="result"></div>
         <div id="recommendations"></div>
@@ -224,15 +242,21 @@
         </p>
     </div>
 
+    <!-- TensorFlow.js and Teachable Machine -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
     <script>
         // Global variables
-        let classifier;
-        let video;
-        let isModelLoaded = false;
-        let isCameraActive = false;
+        let model;
+        let webcam;
+        let isCameraOn = false;
+        let isAnalyzing = false;
+        let analysisInterval;
 
         // REPLACE THIS WITH YOUR ACTUAL MODEL URL from Teachable Machine
-        let imageModelURL = 'https://teachablemachine.withgoogle.com/models/YOUR_MODEL_ID/';
+        const modelURL = 'https://teachablemachine.withgoogle.com/models/YOUR_MODEL_ID/model.json';
+        const metadataURL = 'https://teachablemachine.withgoogle.com/models/YOUR_MODEL_ID/metadata.json';
 
         // Skin analysis database
         const skinConditions = {
@@ -302,108 +326,174 @@
             }
         };
 
-        // Start camera and AI analysis
+        // Start camera
         async function startCamera() {
             const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const analyzeBtn = document.getElementById('analyzeBtn');
             const loadingElement = document.getElementById('loading');
-            const predictionDisplay = document.getElementById('prediction-display');
-            
-            startBtn.disabled = true;
-            startBtn.innerHTML = '🔄 Starting Camera...';
-            loadingElement.innerHTML = '🔬 Accessing camera...';
-            
+            const videoElement = document.getElementById('webcam-video');
+            const placeholder = document.getElementById('camera-placeholder');
+
             try {
-                // Initialize p5.js sketch
-                const sketch = function(p) {
-                    p.setup = function() {
-                        // Create canvas for video
-                        const canvas = p.createCanvas(400, 300);
-                        canvas.parent('video-container');
-                        
-                        // Create video capture
-                        video = p.createCapture(p.VIDEO);
-                        video.size(400, 300);
-                        video.hide(); // Hide the default video element
-                        
-                        loadingElement.innerHTML = '🎯 Camera active! Loading AI model...';
-                        
-                        // Load the AI model
-                        classifier = ml5.imageClassifier(imageModelURL + 'model.json', function() {
-                            loadingElement.innerHTML = '✅ AI Model Loaded! Analyzing your skin...';
-                            startBtn.innerHTML = '✅ AI Analysis Active';
-                            isModelLoaded = true;
-                            isCameraActive = true;
-                            
-                            // Start classification
-                            classifyVideo();
-                        });
-                    };
+                loadingElement.innerHTML = '🔬 Starting camera...';
+                startBtn.disabled = true;
 
-                    p.draw = function() {
-                        p.background(0);
-                        // Draw the flipped video (mirror effect)
-                        p.translate(p.width, 0);
-                        p.scale(-1, 1);
-                        p.image(video, 0, 0, p.width, p.height);
-                    };
-                };
+                // Load AI model first
+                if (!model) {
+                    loadingElement.innerHTML = '🧠 Loading AI model...';
+                    model = await tmImage.load(modelURL, metadataURL);
+                }
 
-                // Create p5 instance
-                new p5(sketch);
+                // Setup webcam
+                loadingElement.innerHTML = '📷 Accessing camera...';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: 400, 
+                        height: 300,
+                        facingMode: 'user' 
+                    } 
+                });
+
+                // Show video element
+                videoElement.srcObject = stream;
+                videoElement.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+
+                // Initialize webcam for Teachable Machine
+                webcam = new tmImage.Webcam(400, 300, true);
+                await webcam.setup();
+                await webcam.play();
+
+                // Update UI
+                loadingElement.innerHTML = '✅ Camera ready! Click "Analyze Skin"';
+                startBtn.classList.add('hidden');
+                stopBtn.classList.remove('hidden');
+                analyzeBtn.disabled = false;
+                isCameraOn = true;
 
             } catch (error) {
                 console.error('Camera error:', error);
-                loadingElement.innerHTML = '❌ Camera error. Please allow camera access and refresh.';
+                loadingElement.innerHTML = '❌ Camera error: ' + error.message;
                 startBtn.disabled = false;
-                startBtn.innerHTML = '🎥 Try Again';
             }
         }
 
-        // Classify video frames
-        function classifyVideo() {
-            if (!classifier || !video) return;
+        // Stop camera
+        function stopCamera() {
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const videoElement = document.getElementById('webcam-video');
+            const placeholder = document.getElementById('camera-placeholder');
+            const loadingElement = document.getElementById('loading');
+
+            // Stop analysis if running
+            if (isAnalyzing) {
+                stopAnalysis();
+            }
+
+            // Stop camera stream
+            if (videoElement.srcObject) {
+                const tracks = videoElement.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                videoElement.srcObject = null;
+            }
+
+            // Stop Teachable Machine webcam
+            if (webcam) {
+                webcam.stop();
+                webcam = null;
+            }
+
+            // Update UI
+            videoElement.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            startBtn.classList.remove('hidden');
+            stopBtn.classList.add('hidden');
+            analyzeBtn.disabled = true;
+            loadingElement.innerHTML = '';
             
-            // Get current video frame and flip it
-            const flippedVideo = ml5.flipImage(video);
-            
-            // Classify the image
-            classifier.classify(flippedVideo, gotResult);
-            
-            // Clean up
-            flippedVideo.remove();
+            isCameraOn = false;
         }
 
-        // Handle classification results
-        function gotResult(error, results) {
-            if (error) {
-                console.error('Classification error:', error);
+        // Analyze skin
+        async function analyzeSkin() {
+            if (!isCameraOn || !model || !webcam) {
+                alert('Please start the camera first!');
                 return;
             }
+
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const loadingElement = document.getElementById('loading');
+
+            analyzeBtn.disabled = true;
+            isAnalyzing = true;
+            loadingElement.innerHTML = '🔬 AI is analyzing your skin...';
+
+            // Start continuous analysis
+            analysisInterval = setInterval(async () => {
+                if (!isAnalyzing) return;
+
+                try {
+                    const predictions = await model.predict(webcam.canvas);
+                    updatePredictions(predictions);
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                }
+            }, 2000); // Analyze every 2 seconds
+
+            // Add stop analysis button
+            analyzeBtn.innerHTML = '⏹️ Stop Analysis';
+            analyzeBtn.onclick = stopAnalysis;
+            analyzeBtn.disabled = false;
+        }
+
+        // Stop analysis
+        function stopAnalysis() {
+            isAnalyzing = false;
             
-            if (results && results[0]) {
-                const label = results[0].label;
-                const confidence = results[0].confidence;
-                const confidencePercent = (confidence * 100).toFixed(1);
-                
-                // Update prediction display
-                const predictionDisplay = document.getElementById('prediction-display');
-                predictionDisplay.innerHTML = `
-                    <h4>🎯 Live AI Detection:</h4>
+            if (analysisInterval) {
+                clearInterval(analysisInterval);
+                analysisInterval = null;
+            }
+
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const loadingElement = document.getElementById('loading');
+
+            analyzeBtn.innerHTML = '🔍 Analyze Skin';
+            analyzeBtn.onclick = analyzeSkin;
+            loadingElement.innerHTML = '✅ Analysis stopped';
+        }
+
+        // Update predictions display
+        function updatePredictions(predictions) {
+            const predictionDisplay = document.getElementById('prediction-display');
+            let highestProb = 0;
+            let mainLabel = '';
+
+            let predictionsHTML = '<h4>🎯 Live AI Analysis:</h4>';
+            
+            predictions.forEach(prediction => {
+                const percent = (prediction.probability * 100).toFixed(1);
+                predictionsHTML += `
                     <div class="confidence-display">
-                        <strong>${label}</strong><br>
-                        <span>Confidence: ${confidencePercent}%</span>
+                        <strong>${prediction.className}:</strong> ${percent}%
                     </div>
                 `;
-                
-                // Update main results if confidence is high enough
-                if (confidence > 0.6) {
-                    displayRealResults(label, confidence);
+
+                if (prediction.probability > highestProb) {
+                    highestProb = prediction.probability;
+                    mainLabel = prediction.className;
                 }
-                
-                // Continue classifying (creates a loop)
-                if (isCameraActive) {
-                    setTimeout(classifyVideo, 1000); // Classify every second
-                }
+            });
+
+            predictionDisplay.innerHTML = predictionsHTML;
+
+            // Show detailed results if confidence is high
+            if (highestProb > 0.7) {
+                displayRealResults(mainLabel, highestProb);
             }
         }
 
@@ -452,7 +542,7 @@
                         <em>${product.split(' - ')[1]}</em>
                     </div>
                 `;
-            `;
+            });
             
             productsHTML += `
                 <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 10px;">
@@ -476,13 +566,18 @@
             }
         }
 
+        // Clean up when page closes
+        window.addEventListener('beforeunload', () => {
+            stopCamera();
+        });
+
         // Initial welcome message
         window.onload = function() {
             document.getElementById('result').innerHTML = `
                 <div class="result-box">
                     <h3>👋 Welcome to GlowGuide AI!</h3>
                     <p>Get real-time AI skin analysis using your camera.</p>
-                    <p><strong>Click "Start AI Analysis" to begin! 🚀</strong></p>
+                    <p><strong>Click "Start Camera" to begin! 🚀</strong></p>
                 </div>
             `;
         };
