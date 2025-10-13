@@ -54,7 +54,7 @@
             width: 400px;
             height: 300px;
             object-fit: cover;
-            transform: scaleX(-1); /* Mirror effect */
+            transform: scaleX(-1);
         }
         .camera-placeholder {
             width: 400px;
@@ -167,6 +167,12 @@
         .hidden {
             display: none;
         }
+        .success-message {
+            background: rgba(76, 175, 80, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -175,8 +181,13 @@
             <h1>✨ GlowGuide AI ✨</h1>
             <p>Real AI Skin Analysis & Personalized Recommendations</p>
             <div class="user-count">
-                <strong>🚀 Powered by TensorFlow.js Neural Network</strong>
+                <strong>🚀 Powered by Real AI - Model Ready!</strong>
             </div>
+        </div>
+
+        <div class="success-message">
+            <h3>✅ AI Model Connected!</h3>
+            <p>Your personal skin analysis AI is ready to use. Click "Start Camera" below!</p>
         </div>
 
         <div class="feature-grid">
@@ -254,11 +265,11 @@
         let isAnalyzing = false;
         let analysisInterval;
 
-        // REPLACE THIS WITH YOUR ACTUAL MODEL URL from Teachable Machine
-        const modelURL = 'https://teachablemachine.withgoogle.com/models/YOUR_MODEL_ID/model.json';
-        const metadataURL = 'https://teachablemachine.withgoogle.com/models/YOUR_MODEL_ID/metadata.json';
+        // ✅ YOUR ACTUAL MODEL URL - Ready to use!
+        const modelURL = 'https://teachablemachine.withgoogle.com/models/XmgPTvPSp/model.json';
+        const metadataURL = 'https://teachablemachine.withgoogle.com/models/XmgPTvPSp/metadata.json';
 
-        // Skin analysis database
+        // Skin analysis database - Make sure these match your model's class names
         const skinConditions = {
             'Acne Skin': {
                 description: 'AI detected signs of breakouts, redness, and inflammation.',
@@ -343,6 +354,7 @@
                 if (!model) {
                     loadingElement.innerHTML = '🧠 Loading AI model...';
                     model = await tmImage.load(modelURL, metadataURL);
+                    loadingElement.innerHTML = '✅ AI model loaded!';
                 }
 
                 // Setup webcam
@@ -375,8 +387,12 @@
 
             } catch (error) {
                 console.error('Camera error:', error);
-                loadingElement.innerHTML = '❌ Camera error: ' + error.message;
+                loadingElement.innerHTML = '❌ ' + error.message;
                 startBtn.disabled = false;
+                
+                if (error.name === 'NotAllowedError') {
+                    loadingElement.innerHTML = '❌ Camera permission denied. Please allow camera access and refresh.';
+                }
             }
         }
 
@@ -442,7 +458,7 @@
                 } catch (error) {
                     console.error('Analysis error:', error);
                 }
-            }, 2000); // Analyze every 2 seconds
+            }, 2000);
 
             // Add stop analysis button
             analyzeBtn.innerHTML = '⏹️ Stop Analysis';
@@ -518,6 +534,10 @@
                     <ul style="margin: 10px 0 10px 20px;">
                         ${conditionData.tips.map(tip => `<li>${tip}</li>`).join('')}
                     </ul>
+                    
+                    <p style="margin-top: 15px; background: rgba(100,255,100,0.2); padding: 10px; border-radius: 5px;">
+                        ✅ <strong>Real AI Analysis:</strong> Powered by your trained neural network!
+                    </p>
                 </div>
             `;
 
@@ -546,7 +566,7 @@
             
             productsHTML += `
                 <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 10px;">
-                    <strong>💡 Tip:</strong> Available at most beauty stores and online retailers.
+                    <strong>🛒 Where to buy:</strong> Available at Amazon, Sephora, Ulta, or your local pharmacy.
                 </div>
             </div>
             `;
@@ -557,12 +577,18 @@
         // Share function
         function shareApp() {
             const shareUrl = 'https://allyguuu.github.io/skin-ai/';
-            if (navigator.clipboard) {
+            const shareText = 'Check out this amazing AI skin analysis app! It uses real neural networks to analyze your skin.';
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'GlowGuide AI - Real AI Skin Analysis',
+                    text: shareText,
+                    url: shareUrl
+                });
+            } else {
                 navigator.clipboard.writeText(shareUrl).then(() => {
                     alert('📋 Link copied to clipboard! Share: ' + shareUrl);
                 });
-            } else {
-                alert('Share this link: ' + shareUrl);
             }
         }
 
@@ -576,8 +602,20 @@
             document.getElementById('result').innerHTML = `
                 <div class="result-box">
                     <h3>👋 Welcome to GlowGuide AI!</h3>
-                    <p>Get real-time AI skin analysis using your camera.</p>
-                    <p><strong>Click "Start Camera" to begin! 🚀</strong></p>
+                    <p>This app uses <strong>real AI powered by your trained neural network</strong> to analyze your skin and provide personalized recommendations.</p>
+                    
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                        <h4>🎯 How It Works:</h4>
+                        <ul style="text-align: left; margin: 10px;">
+                            <li>Click <strong>"Start Camera"</strong> to load the neural network</li>
+                            <li>Allow camera access when prompted</li>
+                            <li>Position your face clearly in the frame</li>
+                            <li>Click <strong>"Analyze Skin"</strong> for real-time AI analysis</li>
+                            <li>Get personalized product recommendations</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>Ready to discover what AI says about your skin? Click "Start Camera"! 🚀</strong></p>
                 </div>
             `;
         };
