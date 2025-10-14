@@ -384,6 +384,32 @@
             min-height: 120px;
             resize: vertical;
         }
+        .condition-indicator {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .condition-bar {
+            flex: 1;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            margin: 0 15px;
+            overflow: hidden;
+        }
+        .condition-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .condition-value {
+            font-weight: 600;
+            min-width: 40px;
+            text-align: right;
+        }
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -461,6 +487,7 @@
                     </div>
                 </div>
                 <video id="webcam-video" class="hidden" autoplay playsinline></video>
+                <canvas id="webcam-canvas" class="hidden"></canvas>
             </div>
 
             <div class="analysis-display" id="prediction-display">
@@ -478,6 +505,9 @@
                 </button>
                 <button onclick="analyzeSkin()" id="analyzeBtn" class="btn btn-secondary" disabled>
                     <span>🔍</span> Analyze Skin
+                </button>
+                <button onclick="captureProgressPhoto()" id="captureBtn" class="btn btn-warning" disabled>
+                    <span>📸</span> Capture Photo
                 </button>
                 <button onclick="showDemoResults()" class="btn btn-warning">
                     <span>🚀</span> Show Demo Results
@@ -555,13 +585,20 @@
         let currentSkinType = '';
         let skinDiary = [];
         let progressPhotos = [];
+        let currentStream = null;
 
-        // Skin analysis database with enhanced science explanations
+        // Enhanced Skin Analysis Database
         const skinConditions = {
             'Acne-Prone Skin': {
                 description: 'Active breakouts, inflammation, and congestion detected. Focus on clearing current acne while preventing future breakouts.',
                 primaryConcerns: ['Active breakouts', 'Inflammation', 'Excess oil', 'Clogged pores', 'Redness'],
                 severityLevel: 'High Priority',
+                conditions: {
+                    'Acne': 85,
+                    'Oiliness': 75,
+                    'Redness': 60,
+                    'Pores': 70
+                },
                 morningRoutine: [
                     {
                         step: 1,
@@ -573,6 +610,30 @@
                         priority: 'high',
                         timing: 'Daily in morning',
                         science: 'Salicylic Acid (BHA) penetrates pores to dissolve oil and dead skin cells. Niacinamide reduces inflammation and regulates oil production. Ceramides repair the skin barrier to prevent moisture loss.'
+                    },
+                    {
+                        step: 2,
+                        product: 'The Ordinary Niacinamide 10% + Zinc 1%',
+                        type: 'Serum',
+                        ingredients: ['Niacinamide 10%', 'Zinc PCA 1%'],
+                        purpose: 'Reduce oil production and calm inflammation',
+                        application: '3-4 drops patted onto face after cleansing',
+                        priority: 'high',
+                        timing: 'Daily in morning',
+                        science: 'Niacinamide at 10% concentration significantly reduces sebum production and improves skin barrier function. Zinc provides anti-inflammatory benefits and helps control bacterial growth.'
+                    }
+                ],
+                eveningRoutine: [
+                    {
+                        step: 1,
+                        product: 'La Roche-Posay Effaclar Medicated Gel Cleanser',
+                        type: 'Cleanser',
+                        ingredients: ['Salicylic Acid 2%', 'Lipohydroxy Acid'],
+                        purpose: 'Deep pore cleansing and exfoliation',
+                        application: 'Massage for 60 seconds, focus on breakout areas',
+                        priority: 'high',
+                        timing: 'Daily in evening',
+                        science: 'Evening cleansing removes accumulated oil, pollution, and makeup. 2% Salicylic Acid provides therapeutic exfoliation while you sleep.'
                     }
                 ],
                 keyIngredients: ['Salicylic Acid', 'Niacinamide', 'Azelaic Acid', 'Zinc', 'Ceramides'],
@@ -584,10 +645,6 @@
                     {
                         title: "The Anti-Inflammatory Power of Niacinamide",
                         content: "Niacinamide (Vitamin B3) reduces inflammation by inhibiting inflammatory cytokines. It also regulates sebum production by normalizing the activity of sebaceous glands. Clinical studies demonstrate 4% Niacinamide reduces acne comparable to 1% clindamycin antibiotic, without antibiotic resistance concerns."
-                    },
-                    {
-                        title: "Azelaic Acid: Multi-Action Acne Fighter",
-                        content: "Azelaic Acid works against acne through three mechanisms: it's antimicrobial against P. acnes bacteria, anti-inflammatory to reduce redness, and it normalizes keratinization to prevent pore clogging. It's particularly effective for inflammatory acne and post-acne redness."
                     }
                 ]
             },
@@ -595,6 +652,12 @@
                 description: 'Significant dehydration and compromised skin barrier detected. Focus on intensive hydration and barrier repair.',
                 primaryConcerns: ['Dehydration', 'Flakiness', 'Tightness', 'Barrier damage', 'Rough texture'],
                 severityLevel: 'High Priority',
+                conditions: {
+                    'Dryness': 90,
+                    'Dehydration': 85,
+                    'Sensitivity': 70,
+                    'Fine Lines': 60
+                },
                 morningRoutine: [
                     {
                         step: 1,
@@ -606,6 +669,30 @@
                         priority: 'high',
                         timing: 'Daily in morning',
                         science: 'Ceramides are lipid molecules that make up 50% of the skin barrier. Glycerin is a humectant that attracts water from the air into the skin. This combination repairs barrier function while maintaining hydration.'
+                    },
+                    {
+                        step: 2,
+                        product: 'COSRX Advanced Snail 96 Mucin Power Essence',
+                        type: 'Essence',
+                        ingredients: ['Snail Secretion Filtrate 96%', 'Hyaluronic Acid'],
+                        purpose: 'Intense hydration and barrier repair',
+                        application: '2-3 pumps patted onto damp skin',
+                        priority: 'high',
+                        timing: 'Daily in morning',
+                        science: 'Snail mucin contains glycoproteins and hyaluronic acid that provide exceptional hydration while promoting skin regeneration and healing.'
+                    }
+                ],
+                eveningRoutine: [
+                    {
+                        step: 1,
+                        product: 'Kiehl\'s Ultra Facial Overnight Hydrating Mask',
+                        type: 'Overnight Mask',
+                        ingredients: ['Squalane', 'Glacier Glycoprotein', 'Hyaluronic Acid'],
+                        purpose: 'Overnight barrier repair and hydration',
+                        application: 'Apply thick layer before bed, massage until absorbed',
+                        priority: 'high',
+                        timing: '3-4 times weekly',
+                        science: 'Overnight treatments work with skin\'s natural repair cycle. Squalane mimics skin\'s natural oils while hyaluronic acid creates a moisture reservoir that lasts through the night.'
                     }
                 ],
                 keyIngredients: ['Hyaluronic Acid', 'Ceramides', 'Squalane', 'Peptides', 'Snail Mucin'],
@@ -617,10 +704,68 @@
                     {
                         title: "Hyaluronic Acid: Molecular Water Magnet",
                         content: "Hyaluronic Acid can hold up to 1000 times its weight in water. It forms a hydrating reservoir in the skin that slowly releases moisture throughout the day. Different molecular weights work at different skin depths - low weights penetrate deeper, high weights provide surface hydration."
-                    },
+                    }
+                ]
+            },
+            'Combination Skin': {
+                description: 'Oilier T-zone with drier cheeks. Requires balanced approach for different facial zones.',
+                primaryConcerns: ['Oily T-zone', 'Dry cheeks', 'Enlarged pores', 'Uneven texture'],
+                severityLevel: 'Medium Priority',
+                conditions: {
+                    'Oiliness': 65,
+                    'Dryness': 55,
+                    'Pores': 70,
+                    'Uneven Texture': 60
+                },
+                morningRoutine: [
                     {
-                        title: "Squalane: Skin-Identical Moisture",
-                        content: "Squalane is a hydrogenated form of squalene, which is naturally produced by your sebaceous glands. It's bio-identical to your skin's natural oils, making it exceptionally well-tolerated. It reinforces the skin barrier and provides long-lasting hydration without greasiness."
+                        step: 1,
+                        product: 'Cetaphil Gentle Skin Cleanser',
+                        type: 'Cleanser',
+                        ingredients: ['Glycerin', 'Niacinamide', 'Panthenol'],
+                        purpose: 'Balance oil without over-drying',
+                        application: 'Focus on T-zone, gentle on cheeks',
+                        priority: 'medium',
+                        timing: 'Daily in morning',
+                        science: 'Glycerin provides hydration while Niacinamide regulates sebum production in oily areas without stripping dry zones.'
+                    }
+                ],
+                keyIngredients: ['Niacinamide', 'Hyaluronic Acid', 'Ceramides', 'Zinc'],
+                scienceExplanations: [
+                    {
+                        title: "Zone-Based Skincare Science",
+                        content: "Combination skin requires different approaches for different facial zones. The T-zone has more sebaceous glands requiring oil control, while cheeks need hydration reinforcement without triggering more oil production."
+                    }
+                ]
+            },
+            'Sensitive Skin': {
+                description: 'Reactive skin prone to redness and irritation. Focus on calming and barrier strengthening.',
+                primaryConcerns: ['Redness', 'Irritation', 'Reactivity', 'Barrier weakness'],
+                severityLevel: 'High Priority',
+                conditions: {
+                    'Sensitivity': 85,
+                    'Redness': 75,
+                    'Dryness': 65,
+                    'Irritation': 70
+                },
+                morningRoutine: [
+                    {
+                        step: 1,
+                        product: 'Avene Tolerance Control Cleanser',
+                        type: 'Cleanser',
+                        ingredients: ['Thermal Spring Water', 'Dexpanthanol', 'Ceramides'],
+                        purpose: 'Ultra-gentle cleansing for reactive skin',
+                        application: '10-second contact, lukewarm water only',
+                        priority: 'high',
+                        timing: 'Daily in morning',
+                        science: 'Thermal spring water reduces reactivity while ceramides reinforce the compromised skin barrier common in sensitive skin types.'
+                    }
+                ],
+                keyIngredients: ['Centella Asiatica', 'Niacinamide', 'Ceramides', 'Oat Extract'],
+                scienceExplanations: [
+                    {
+                        title: "Understanding Skin Reactivity",
+                        content: "Sensitive skin has a lower threshold for irritation due to a compromised barrier and heightened nerve responses. Ingredients that calm both inflammation and nerve endings are essential for managing reactivity."
                     }
                 ]
             }
@@ -633,7 +778,223 @@
             
             if (savedDiary) skinDiary = JSON.parse(savedDiary);
             if (savedPhotos) progressPhotos = JSON.parse(savedPhotos);
+            
+            console.log('User data loaded:', { diaryEntries: skinDiary.length, photos: progressPhotos.length });
         }
+
+        // Fixed Camera Functions
+        async function startCamera() {
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const captureBtn = document.getElementById('captureBtn');
+            const loadingElement = document.getElementById('loading');
+            const videoElement = document.getElementById('webcam-video');
+            const placeholder = document.getElementById('camera-placeholder');
+
+            try {
+                loadingElement.innerHTML = '🔬 Initializing camera...';
+                startBtn.disabled = true;
+
+                // Get camera stream with better error handling
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 450 },
+                        height: { ideal: 337 },
+                        facingMode: 'user'
+                    },
+                    audio: false 
+                });
+
+                currentStream = stream;
+                videoElement.srcObject = stream;
+                
+                // Wait for video to be ready
+                videoElement.onloadedmetadata = () => {
+                    videoElement.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    
+                    loadingElement.innerHTML = '✅ Camera ready! Click "Analyze Skin" to begin';
+                    startBtn.classList.add('hidden');
+                    stopBtn.classList.remove('hidden');
+                    analyzeBtn.disabled = false;
+                    captureBtn.disabled = false;
+                    isCameraOn = true;
+                };
+
+            } catch (error) {
+                console.error('Camera error:', error);
+                loadingElement.innerHTML = '❌ Camera access denied. Please allow camera permissions or use "Show Demo Results".';
+                startBtn.disabled = false;
+                
+                if (error.name === 'NotAllowedError') {
+                    loadingElement.innerHTML += '<br>💡 Tip: Check your browser permissions and refresh the page.';
+                }
+            }
+        }
+
+        function stopCamera() {
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const captureBtn = document.getElementById('captureBtn');
+            const videoElement = document.getElementById('webcam-video');
+            const placeholder = document.getElementById('camera-placeholder');
+            const loadingElement = document.getElementById('loading');
+
+            if (isAnalyzing) stopAnalysis();
+            
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+
+            videoElement.srcObject = null;
+            videoElement.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            startBtn.classList.remove('hidden');
+            stopBtn.classList.add('hidden');
+            analyzeBtn.disabled = true;
+            captureBtn.disabled = true;
+            loadingElement.innerHTML = '';
+            isCameraOn = false;
+        }
+
+        // Enhanced Analysis Function
+        function analyzeSkin() {
+            if (!isCameraOn) {
+                alert('Please start the camera first!');
+                return;
+            }
+
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const loadingElement = document.getElementById('loading');
+            const predictionDisplay = document.getElementById('prediction-display');
+
+            analyzeBtn.disabled = true;
+            isAnalyzing = true;
+            loadingElement.innerHTML = '🔬 AI is analyzing your skin...';
+            predictionDisplay.innerHTML = '<p style="text-align: center; color: #667eea;">Analyzing skin conditions...</p>';
+
+            // Simulate real-time analysis with progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 10;
+                loadingElement.innerHTML = `🔬 AI analysis in progress... ${progress}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    
+                    // Generate enhanced analysis results
+                    const skinTypes = Object.keys(skinConditions);
+                    const randomSkinType = skinTypes[Math.floor(Math.random() * skinTypes.length)];
+                    const randomConfidence = (0.85 + Math.random() * 0.1).toFixed(2);
+                    
+                    displayRealResults(randomSkinType, randomConfidence);
+                    stopAnalysis();
+                }
+            }, 200);
+        }
+
+        function stopAnalysis() {
+            isAnalyzing = false;
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const loadingElement = document.getElementById('loading');
+            
+            analyzeBtn.innerHTML = '<span>🔍</span> Analyze Skin';
+            analyzeBtn.onclick = analyzeSkin;
+            analyzeBtn.disabled = !isCameraOn;
+        }
+
+        // Enhanced Results Display
+        function displayRealResults(skinType, confidence) {
+            currentSkinType = skinType;
+            const conditionData = skinConditions[skinType];
+            const confidencePercent = (confidence * 100).toFixed(1);
+            
+            // Show results section
+            document.getElementById('results-section').classList.remove('hidden');
+            
+            const resultElement = document.getElementById('result');
+            resultElement.innerHTML = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div class="skin-type-badge">${skinType}</div>
+                    <div class="confidence-meter">
+                        <h3 style="margin: 0 0 10px 0; color: #2c3e50;">AI Confidence: ${confidencePercent}%</h3>
+                        <p style="margin: 0; color: #7f8c8d; font-size: 1.1em;">${conditionData.description}</p>
+                    </div>
+                </div>
+                
+                <div style="margin: 25px 0;">
+                    <h4 style="color: #2c3e50; margin-bottom: 20px;">📊 Condition Analysis</h4>
+                    ${Object.entries(conditionData.conditions).map(([condition, value]) => `
+                        <div class="condition-indicator">
+                            <span style="min-width: 120px;">${condition}</span>
+                            <div class="condition-bar">
+                                <div class="condition-fill" style="width: ${value}%; background: ${getConditionColor(value)};"></div>
+                            </div>
+                            <span class="condition-value">${value}%</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Load all tabs
+            loadRoutineRecommendations();
+            loadProductList();
+            loadScienceExplanations();
+            loadSkinDiary();
+            loadProgressPhotos();
+            loadExportOptions();
+            
+            // Scroll to results
+            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function getConditionColor(value) {
+            if (value >= 80) return '#e74c3c';
+            if (value >= 60) return '#f39c12';
+            return '#27ae60';
+        }
+
+        // NEW: Capture Progress Photo from Camera
+        function captureProgressPhoto() {
+            if (!isCameraOn) {
+                alert('Please start the camera first!');
+                return;
+            }
+
+            const video = document.getElementById('webcam-video');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw the current video frame to canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const photoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            const notes = prompt('Add notes for this progress photo (optional):');
+            
+            const newPhoto = {
+                date: new Date().toISOString(),
+                dataUrl: photoDataUrl,
+                notes: notes || 'Camera capture - ' + new Date().toLocaleDateString(),
+                source: 'camera'
+            };
+            
+            progressPhotos.push(newPhoto);
+            localStorage.setItem('progressPhotos', JSON.stringify(progressPhotos));
+            
+            // Switch to progress tab to show the new photo
+            switchTab('progress');
+            alert('Progress photo captured successfully! 📸');
+        }
+
+        // Rest of the functions remain the same (tab switching, diary, PDF export, etc.)
+        // [Previous code for tab switching, skin diary, progress photos, PDF export remains unchanged]
+        // ... (including loadSkinDiary, addDiaryEntry, loadProgressPhotos, etc.)
 
         // Tab switching function
         function switchTab(tabName) {
@@ -652,12 +1013,12 @@
 
         // DEMO FUNCTION TO SHOW RESULTS IMMEDIATELY
         function showDemoResults() {
-            const skinTypes = ['Acne-Prone Skin', 'Dry Skin'];
+            const skinTypes = Object.keys(skinConditions);
             const randomSkinType = skinTypes[Math.floor(Math.random() * skinTypes.length)];
             displayRealResults(randomSkinType, 0.95);
         }
 
-        // NEW: Skin Diary Functions
+        // Skin Diary Functions
         function loadSkinDiary() {
             let html = `
                 <h3 style="margin-bottom: 20px; color: #2c3e50;">📓 Your Skin Journey Diary</h3>
@@ -689,7 +1050,7 @@
                 skinDiary.slice().reverse().forEach(entry => {
                     html += `
                         <div class="diary-entry">
-                            <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
                                 <strong style="color: #2c3e50;">${new Date(entry.date).toLocaleDateString()}</strong>
                                 <span style="color: #7f8c8d; font-size: 0.9em;">${entry.condition}</span>
                             </div>
@@ -733,7 +1094,7 @@
             alert('Diary entry saved successfully! 📝');
         }
 
-        // NEW: Progress Photos Functions
+        // Progress Photos Functions
         function loadProgressPhotos() {
             let html = `
                 <h3 style="margin-bottom: 20px; color: #2c3e50;">📸 Progress Photo Timeline</h3>
@@ -767,7 +1128,7 @@
                                 <strong style="color: #2c3e50;">${new Date(photo.date).toLocaleDateString()}</strong>
                                 ${photo.notes ? `<p style="color: #7f8c8d; margin: 5px 0;">${photo.notes}</p>` : ''}
                             </div>
-                            <img src="${photo.dataUrl}" style="max-width: 100%; border-radius: 10px; border: 2px solid #e9ecef;">
+                            <img src="${photo.dataUrl}" style="max-width: 100%; max-height: 300px; border-radius: 10px; border: 2px solid #e9ecef;">
                         </div>
                     `;
                 });
@@ -793,7 +1154,8 @@
                 const newPhoto = {
                     date: new Date().toISOString(),
                     dataUrl: e.target.result,
-                    notes: notes || 'No notes'
+                    notes: notes || 'No notes',
+                    source: 'upload'
                 };
 
                 progressPhotos.push(newPhoto);
@@ -810,7 +1172,7 @@
             reader.readAsDataURL(file);
         }
 
-        // NEW: Science Explanations
+        // Science Explanations
         function loadScienceExplanations() {
             const conditionData = skinConditions[currentSkinType];
             let html = `
@@ -856,12 +1218,15 @@
                 'Azelaic Acid': 'Naturally occurring acid that reduces inflammation, kills acne bacteria, and normalizes keratinization. Particularly effective for red, inflamed acne.',
                 'Zinc': 'Mineral that reduces sebum production, has anti-inflammatory properties, and supports wound healing. Often used to reduce acne-related redness.',
                 'Squalane': 'Bio-identical oil that mimics skin\'s natural sebum. Provides lightweight hydration, reinforces skin barrier, and improves skin elasticity.',
-                'Peptides': 'Amino acid chains that signal skin to produce more collagen. Improve skin firmness, reduce wrinkles, and support barrier repair.'
+                'Peptides': 'Amino acid chains that signal skin to produce more collagen. Improve skin firmness, reduce wrinkles, and support barrier repair.',
+                'Centella Asiatica': 'Traditional herb with powerful anti-inflammatory and wound-healing properties. Calms sensitive skin and strengthens the skin barrier.',
+                'Snail Mucin': 'Rich in glycoproteins and hyaluronic acid, providing exceptional hydration while promoting skin regeneration and healing.',
+                'Oat Extract': 'Soothes irritated skin, reduces redness, and provides anti-inflammatory benefits for sensitive and reactive skin types.'
             };
             return scienceData[ingredient] || 'Scientific research supports this ingredient for improving skin health and addressing specific concerns.';
         }
 
-        // NEW: PDF Export Function
+        // PDF Export Function
         function loadExportOptions() {
             const conditionData = skinConditions[currentSkinType];
             let html = `
@@ -964,131 +1329,6 @@
             alert('📄 PDF report generated successfully! Check your downloads.');
         }
 
-        // Existing functions (shortened for brevity)
-        function startCamera() {
-            const startBtn = document.getElementById('startBtn');
-            const stopBtn = document.getElementById('stopBtn');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            const loadingElement = document.getElementById('loading');
-            const videoElement = document.getElementById('webcam-video');
-            const placeholder = document.getElementById('camera-placeholder');
-
-            try {
-                loadingElement.innerHTML = '🔬 Initializing camera...';
-                startBtn.disabled = true;
-
-                // Setup webcam
-                loadingElement.innerHTML = '📷 Accessing camera...';
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { width: 450, height: 337, facingMode: 'user' } 
-                });
-
-                videoElement.srcObject = stream;
-                videoElement.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-
-                loadingElement.innerHTML = '✅ Camera ready! Click "Analyze Skin" to begin';
-                startBtn.classList.add('hidden');
-                stopBtn.classList.remove('hidden');
-                analyzeBtn.disabled = false;
-                isCameraOn = true;
-
-            } catch (error) {
-                loadingElement.innerHTML = '❌ Camera access denied. Click "Show Demo Results" to see how it works.';
-                startBtn.disabled = false;
-            }
-        }
-
-        function stopCamera() {
-            const startBtn = document.getElementById('startBtn');
-            const stopBtn = document.getElementById('stopBtn');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            const videoElement = document.getElementById('webcam-video');
-            const placeholder = document.getElementById('camera-placeholder');
-            const loadingElement = document.getElementById('loading');
-
-            if (isAnalyzing) stopAnalysis();
-            if (videoElement.srcObject) {
-                videoElement.srcObject.getTracks().forEach(track => track.stop());
-                videoElement.srcObject = null;
-            }
-
-            videoElement.classList.add('hidden');
-            placeholder.classList.remove('hidden');
-            startBtn.classList.remove('hidden');
-            stopBtn.classList.add('hidden');
-            analyzeBtn.disabled = true;
-            loadingElement.innerHTML = '';
-            isCameraOn = false;
-        }
-
-        function analyzeSkin() {
-            if (!isCameraOn) return;
-
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            const loadingElement = document.getElementById('loading');
-
-            analyzeBtn.disabled = true;
-            isAnalyzing = true;
-            loadingElement.innerHTML = '🔬 AI is analyzing your skin...';
-
-            // Simulate AI analysis
-            setTimeout(() => {
-                const skinTypes = ['Acne-Prone Skin', 'Dry Skin'];
-                const randomSkinType = skinTypes[Math.floor(Math.random() * skinTypes.length)];
-                const randomConfidence = (0.85 + Math.random() * 0.1).toFixed(2);
-                
-                displayRealResults(randomSkinType, randomConfidence);
-                stopAnalysis();
-            }, 3000);
-
-            analyzeBtn.innerHTML = '⏹️ Stop Analysis';
-            analyzeBtn.onclick = stopAnalysis;
-        }
-
-        function stopAnalysis() {
-            isAnalyzing = false;
-            if (analysisInterval) {
-                clearInterval(analysisInterval);
-                analysisInterval = null;
-            }
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            const loadingElement = document.getElementById('loading');
-            analyzeBtn.innerHTML = '🔍 Analyze Skin';
-            analyzeBtn.onclick = analyzeSkin;
-        }
-
-        function displayRealResults(skinType, confidence) {
-            currentSkinType = skinType;
-            const conditionData = skinConditions[skinType];
-            const confidencePercent = (confidence * 100).toFixed(1);
-            
-            // Show results section
-            document.getElementById('results-section').classList.remove('hidden');
-            
-            const resultElement = document.getElementById('result');
-            resultElement.innerHTML = `
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <div class="skin-type-badge">${skinType}</div>
-                    <div class="confidence-meter">
-                        <h3 style="margin: 0 0 10px 0; color: #2c3e50;">AI Confidence: ${confidencePercent}%</h3>
-                        <p style="margin: 0; color: #7f8c8d; font-size: 1.1em;">${conditionData.description}</p>
-                    </div>
-                </div>
-            `;
-
-            // Load all tabs
-            loadRoutineRecommendations();
-            loadProductList();
-            loadScienceExplanations();
-            loadSkinDiary();
-            loadProgressPhotos();
-            loadExportOptions();
-            
-            // Scroll to results
-            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
-        }
-
         function loadRoutineRecommendations() {
             const conditionData = skinConditions[currentSkinType];
             let html = `
@@ -1126,6 +1366,43 @@
                 `;
             });
             
+            // Add evening routine if available
+            if (conditionData.eveningRoutine) {
+                html += `
+                    <h3 style="margin: 40px 0 20px 0; color: #2c3e50;">🌙 Evening Routine</h3>
+                `;
+                
+                conditionData.eveningRoutine.forEach(step => {
+                    html += `
+                        <div class="routine-step">
+                            <div class="step-header">
+                                <div class="step-number">${step.step}</div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; font-size: 1.1em; color: #2c3e50;">${step.product}</div>
+                                    <div style="color: #7f8c8d; font-size: 0.9em;">${step.type} • ${step.timing}</div>
+                                </div>
+                                <span class="priority-badge priority-${step.priority}">${step.priority.toUpperCase()}</span>
+                            </div>
+                            <div style="margin: 10px 0;">
+                                <strong>Purpose:</strong> ${step.purpose}
+                            </div>
+                            <div style="margin: 10px 0;">
+                                <strong>Key Ingredients:</strong>
+                                ${step.ingredients.map(ing => `<span class="ingredient-tag">${ing}</span>`).join('')}
+                            </div>
+                            <div style="margin: 10px 0;">
+                                <strong>Application:</strong> ${step.application}
+                            </div>
+                            ${step.science ? `
+                            <div style="margin: 10px 0; padding: 10px; background: rgba(52, 152, 219, 0.1); border-radius: 8px;">
+                                <strong>🔬 Science:</strong> ${step.science}
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+            }
+            
             html += `</div>`;
             
             document.getElementById('recommendations').innerHTML = html;
@@ -1138,7 +1415,10 @@
                 <div style="display: grid; gap: 15px;">
             `;
             
-            const allProducts = [...conditionData.morningRoutine];
+            const allProducts = [
+                ...conditionData.morningRoutine,
+                ...(conditionData.eveningRoutine || [])
+            ];
             
             allProducts.forEach(product => {
                 html += `
@@ -1173,7 +1453,7 @@
         }
 
         function shareApp() {
-            const shareUrl = 'https://allyguuu.github.io/skin-ai/';
+            const shareUrl = window.location.href;
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(shareUrl).then(() => {
                     alert('📋 Link copied to clipboard! Share your personalized skincare routine with friends.');
