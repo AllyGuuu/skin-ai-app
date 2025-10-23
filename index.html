@@ -4,705 +4,350 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkinCast - Complete AI Skin Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/3.0.3/plotly.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            color: #2c3e50;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
-            line-height: 1.6;
+            overflow-x: hidden;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 40px;
-            border-radius: 20px;
-            margin-bottom: 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        h1 {
-            font-size: 3em;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #6a11cb, #2575fc);
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea, #764ba2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-weight: 700;
+            background-clip: text;
         }
-        .tagline {
-            font-size: 1.2em;
-            color: #7f8c8d;
-            margin-bottom: 20px;
+        
+        .floating-animation {
+            animation: float 6s ease-in-out infinite;
         }
-        .camera-section {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 30px;
-            border-radius: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center;
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
-        .section-title {
-            font-size: 1.8em;
-            color: #2c3e50;
-            margin-bottom: 25px;
-            text-align: center;
-            font-weight: 600;
-        }
-        .camera-container {
-            position: relative;
-            display: inline-block;
-            margin: 20px 0;
-        }
-        #webcam-video {
-            border: 3px solid #e9ecef;
-            border-radius: 15px;
-            background: #f8f9fa;
-            width: 450px;
-            height: 337px;
-            object-fit: cover;
-            transform: scaleX(-1);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .camera-placeholder {
-            width: 450px;
-            height: 337px;
-            border: 3px dashed #bdc3c7;
-            border-radius: 15px;
-            background: #f8f9fa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
-            color: #7f8c8d;
-            font-size: 1.1em;
-        }
-        .control-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 25px 0;
-            flex-wrap: wrap;
-        }
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
+        
+        .product-card {
             transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 160px;
-            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-            color: white;
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(106, 17, 203, 0.4);
-        }
-        .btn-secondary {
-            background: #27ae60;
-            color: white;
-        }
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
-        }
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-        .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
-        }
-        .btn-warning {
-            background: #f39c12;
-            color: white;
-        }
-        .btn-warning:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
-        }
-        .btn:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        .analysis-display {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 15px;
-            margin: 20px 0;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .results-section {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 35px;
+        
+        .budget-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px 12px;
             border-radius: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        .skin-type-badge {
-            display: inline-block;
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-            color: white;
-            border-radius: 50px;
-            font-size: 1.3em;
+            font-size: 0.75rem;
             font-weight: 600;
-            margin: 15px 0;
-            box-shadow: 0 5px 15px rgba(106, 17, 203, 0.3);
+            z-index: 10;
         }
-        .confidence-meter {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            border-left: 5px solid #27ae60;
+        
+        .budget-affordable {
+            background: #10b981;
+            color: white;
         }
+        
+        .budget-premium {
+            background: #f59e0b;
+            color: white;
+        }
+        
         .routine-step {
-            background: #f8f9fa;
-            padding: 20px;
-            margin: 15px 0;
-            border-radius: 15px;
-            border-left: 5px solid #3498db;
-            transition: transform 0.2s ease;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
         }
+        
         .routine-step:hover {
+            border-left-color: #764ba2;
             transform: translateX(5px);
         }
-        .step-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        .step-number {
-            background: #3498db;
-            color: white;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            margin-right: 15px;
-        }
-        .product-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 15px 0;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            border: 1px solid #e9ecef;
-        }
-        .product-name {
-            font-size: 1.3em;
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-        .ingredient-tag {
-            display: inline-block;
-            background: rgba(106, 17, 203, 0.1);
-            color: #6a11cb;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            margin: 5px 5px 5px 0;
-            font-weight: 500;
-        }
-        .priority-badge {
-            display: inline-block;
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-        .priority-high { background: #e74c3c; color: white; }
-        .priority-medium { background: #f39c12; color: white; }
-        .priority-low { background: #27ae60; color: white; }
-        .loading-indicator {
-            text-align: center;
-            padding: 30px;
-            color: #7f8c8d;
-            font-size: 1.1em;
-        }
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-        .feature-card {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        .feature-icon {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-        }
-        .hidden {
-            display: none;
-        }
-        .tab-container {
-            display: flex;
-            margin: 25px 0;
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 5px;
-            flex-wrap: wrap;
-        }
-        .tab {
-            flex: 1;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 10px;
-            font-weight: 600;
+        
+        .tab-button {
             transition: all 0.3s ease;
-            min-width: 120px;
+            position: relative;
         }
-        .tab.active {
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            color: #6a11cb;
+        
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #667eea;
+            border-radius: 2px;
         }
-        .tab-content {
-            display: none;
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
         }
-        .tab-content.active {
-            display: block;
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
-        .disclaimer {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
+        
+        .skin-analysis-chart {
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
-            margin-top: 30px;
-            font-size: 0.9em;
-            color: #7f8c8d;
-            text-align: center;
-            border-left: 4px solid #e74c3c;
-        }
-        .success-banner {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
-            color: white;
             padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
-        .demo-mode {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            text-align: center;
+        
+        .ingredient-tag {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 1px solid rgba(102, 126, 234, 0.3);
         }
-        .science-explanation {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-        }
-        .diary-entry {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 15px 0;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            border-left: 5px solid #3498db;
-        }
-        .progress-photo {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 15px 0;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            text-align: center;
-        }
-        .photo-placeholder {
-            width: 200px;
-            height: 200px;
-            border: 2px dashed #bdc3c7;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 15px;
-            background: #f8f9fa;
-            color: #7f8c8d;
-        }
-        .export-section {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin: 20px 0;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            text-align: center;
-        }
-        textarea, input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 16px;
-            margin: 10px 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-        .condition-indicator {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        .condition-bar {
-            flex: 1;
+        
+        .concern-indicator {
             height: 8px;
-            background: #ecf0f1;
             border-radius: 4px;
-            margin: 0 15px;
-            overflow: hidden;
+            transition: width 0.8s ease;
         }
-        .condition-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.5s ease;
-        }
-        .condition-value {
-            font-weight: 600;
-            min-width: 40px;
-            text-align: right;
-        }
-        .face-overlay {
+        
+        .camera-overlay {
             position: absolute;
             top: 0;
             left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
             pointer-events: none;
         }
-        .brand-logo {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        .real-time-prediction {
-            background: rgba(106, 17, 203, 0.1);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
-            border-left: 4px solid #6a11cb;
-        }
         
-        /* New Product Recommendation Styles */
-        .product-recommendation {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 15px 0;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            border: 1px solid #e9ecef;
-            transition: transform 0.2s ease;
-        }
-        .product-recommendation:hover {
-            transform: translateY(-2px);
-        }
-        .product-image {
-            width: 100px;
-            height: 100px;
-            border-radius: 8px;
-            object-fit: cover;
-            margin-right: 20px;
-        }
-        .product-header {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-        .product-info {
-            flex: 1;
-        }
-        .product-price {
-            font-size: 1.2em;
-            font-weight: 600;
-            color: #27ae60;
-        }
-        .product-rating {
-            display: flex;
-            align-items: center;
-            margin: 5px 0;
-        }
-        .rating-stars {
-            color: #f39c12;
-            margin-right: 8px;
-        }
-        .product-features {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 10px 0;
-        }
-        .feature-tag {
-            background: rgba(106, 17, 203, 0.1);
-            color: #6a11cb;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 500;
-        }
-        .buy-button {
-            background: #6a11cb;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        .buy-button:hover {
-            background: #2575fc;
-        }
-        .retailer-logo {
-            height: 20px;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-        .loading-products {
-            text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-        }
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        .skin-concern-match {
-            background: rgba(39, 174, 96, 0.1);
-            border-left: 4px solid #27ae60;
-            padding: 10px 15px;
-            margin: 10px 0;
-            border-radius: 0 8px 8px 0;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            .header {
-                padding: 25px;
-            }
-            h1 {
-                font-size: 2.2em;
-            }
-            #webcam-video, .camera-placeholder {
-                width: 100%;
-                height: 300px;
-            }
-            .control-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-            .btn {
-                width: 100%;
-                max-width: 300px;
-            }
-            .tab-container {
-                flex-direction: column;
-            }
-            .product-header {
-                flex-direction: column;
-            }
-            .product-image {
-                margin-right: 0;
-                margin-bottom: 15px;
-            }
+        .ai-prediction-box {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.1);
         }
     </style>
-    <!-- TensorFlow.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-    <!-- Teachable Machine -->
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-    <!-- PDF Export Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <div class="container">
+    <!-- Navigation -->
+    <nav class="glass-morphism p-4 mb-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-microscope text-white text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white">SkinCast AI</h1>
+            </div>
+            <div class="flex space-x-4">
+                <button onclick="startNewAnalysis()" class="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all">
+                    <i class="fas fa-redo mr-2"></i>New Analysis
+                </button>
+                <button onclick="shareResults()" class="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all">
+                    <i class="fas fa-share mr-2"></i>Share
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4">
         <!-- Header Section -->
-        <div class="header">
-            <div class="brand-logo">🔬</div>
-            <h1>SkinCast</h1>
-            <p class="tagline">Complete AI-Powered Skin Analysis & Personalized Care</p>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🧠</div>
-                    <h3>AI Analysis</h3>
-                    <p>Real-time skin assessment</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🛒</div>
-                    <h3>Smart Products</h3>
-                    <p>Personalized recommendations</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📓</div>
-                    <h3>Skin Diary</h3>
-                    <p>Track progress daily</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📸</div>
-                    <h3>Progress Photos</h3>
-                    <p>Visual timeline</p>
+        <div class="text-center mb-12">
+            <div class="floating-animation inline-block mb-4">
+                <div class="w-20 h-20 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto">
+                    <i class="fas fa-brain text-white text-3xl"></i>
                 </div>
             </div>
+            <h2 class="text-5xl font-bold text-white mb-4">AI-Powered Skin Analysis</h2>
+            <p class="text-xl text-white/80 max-w-2xl mx-auto">Get personalized skincare recommendations with budget-friendly and premium options</p>
         </div>
 
         <!-- Camera Section -->
-        <div class="camera-section">
-            <h2 class="section-title">Complete Skin Analysis</h2>
+        <div class="glass-morphism rounded-3xl p-8 mb-8">
+            <h3 class="text-2xl font-bold text-white mb-6 text-center">
+                <i class="fas fa-camera mr-3"></i>Complete Skin Analysis
+            </h3>
             
-            <div class="demo-mode">
-                <strong>Enhanced AI Model</strong> - Powered by Teachable Machine & Real Product Data
-            </div>
-
-            <div class="camera-container">
-                <div id="camera-placeholder" class="camera-placeholder">
-                    <div>
-                        <div style="font-size: 3em; margin-bottom: 10px;">📷</div>
-                        <p>Camera ready for complete analysis</p>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="relative">
+                    <div id="camera-placeholder" class="bg-white/10 rounded-2xl p-8 text-center border-2 border-dashed border-white/30">
+                        <div class="text-6xl text-white/60 mb-4">📷</div>
+                        <p class="text-white/80 text-lg">Camera ready for analysis</p>
+                        <p class="text-white/60 text-sm mt-2">Click "Start Camera" to begin</p>
+                    </div>
+                    <video id="webcam-video" class="hidden w-full rounded-2xl" autoplay playsinline></video>
+                    <canvas id="webcam-canvas" class="hidden"></canvas>
+                    <div id="camera-overlay" class="camera-overlay hidden"></div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div id="prediction-display" class="ai-prediction-box p-4">
+                        <p class="text-white/80 text-center">Start camera to see real-time analysis</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="startCamera()" id="startBtn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-semibold transition-all">
+                            <i class="fas fa-play mr-2"></i>Start Camera
+                        </button>
+                        <button onclick="stopCamera()" id="stopBtn" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-semibold transition-all hidden">
+                            <i class="fas fa-stop mr-2"></i>Stop Camera
+                        </button>
+                        <button onclick="startRealTimePrediction()" id="realtimeBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold transition-all" disabled>
+                            <i class="fas fa-brain mr-2"></i>AI Analysis
+                        </button>
+                        <button onclick="showDemoResults()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-xl font-semibold transition-all">
+                            <i class="fas fa-rocket mr-2"></i>Demo
+                        </button>
                     </div>
                 </div>
-                <video id="webcam-video" class="hidden" autoplay playsinline></video>
-                <canvas id="webcam-canvas" class="hidden"></canvas>
             </div>
-
-            <div class="analysis-display" id="prediction-display">
-                <p style="text-align: center; color: #7f8c8d; margin: 0;">
-                    Start camera to begin complete skin analysis
-                </p>
-            </div>
-
-            <div class="control-buttons">
-                <button onclick="startCamera()" id="startBtn" class="btn btn-primary">
-                    <span>🎥</span> Start Camera
-                </button>
-                <button onclick="stopCamera()" id="stopBtn" class="btn btn-danger hidden">
-                    <span>⏹️</span> Stop Camera
-                </button>
-                <button onclick="startRealTimePrediction()" id="realtimeBtn" class="btn btn-secondary" disabled>
-                    <span>🔍</span> Start AI Analysis
-                </button>
-                <button onclick="captureProgressPhoto()" id="captureBtn" class="btn btn-warning" disabled>
-                    <span>📸</span> Capture Photo
-                </button>
-                <button onclick="showDemoResults()" class="btn btn-warning">
-                    <span>🚀</span> Show Demo
-                </button>
-            </div>
-
-            <div class="loading-indicator" id="loading"></div>
         </div>
 
         <!-- Results Section -->
-        <div id="results-section" class="results-section hidden">
-            <div class="success-banner">
-                <h2 style="margin: 0; font-size: 1.5em;">✅ Complete Analysis Complete!</h2>
-                <p style="margin: 10px 0 0 0; opacity: 0.9;">Your personalized skincare plan is ready</p>
+        <div id="results-section" class="hidden">
+            <!-- Analysis Summary -->
+            <div class="glass-morphism rounded-3xl p-8 mb-8">
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-check text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-white mb-2">Analysis Complete!</h3>
+                    <p class="text-white/80">Your personalized skincare plan is ready</p>
+                </div>
+                
+                <div id="skin-type-result" class="text-center mb-6">
+                    <!-- Skin type will be displayed here -->
+                </div>
+                
+                <!-- Skin Concerns Chart -->
+                <div class="skin-analysis-chart">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4">Skin Analysis Breakdown</h4>
+                    <div id="concerns-chart" class="h-64"></div>
+                </div>
             </div>
 
-            <div id="result"></div>
-            
-            <div class="tab-container">
-                <div class="tab active" onclick="switchTab('products')">Recommended Products</div>
-                <div class="tab" onclick="switchTab('routine')">Daily Routine</div>
-                <div class="tab" onclick="switchTab('science')">Science</div>
-                <div class="tab" onclick="switchTab('diary')">Skin Diary</div>
-                <div class="tab" onclick="switchTab('progress')">Progress Photos</div>
-                <div class="tab" onclick="switchTab('export')">Export Report</div>
+            <!-- Tab Navigation -->
+            <div class="glass-morphism rounded-2xl p-4 mb-8">
+                <div class="flex flex-wrap gap-2 justify-center">
+                    <button onclick="switchTab('products')" class="tab-button active px-6 py-3 text-white font-semibold rounded-xl" id="tab-products">
+                        <i class="fas fa-shopping-cart mr-2"></i>Recommended Products
+                    </button>
+                    <button onclick="switchTab('routine')" class="tab-button px-6 py-3 text-white font-semibold rounded-xl" id="tab-routine">
+                        <i class="fas fa-clock mr-2"></i>Daily Routine
+                    </button>
+                    <button onclick="switchTab('science')" class="tab-button px-6 py-3 text-white font-semibold rounded-xl" id="tab-science">
+                        <i class="fas fa-flask mr-2"></i>Science
+                    </button>
+                    <button onclick="switchTab('progress')" class="tab-button px-6 py-3 text-white font-semibold rounded-xl" id="tab-progress">
+                        <i class="fas fa-chart-line mr-2"></i>Progress Tracking
+                    </button>
+                </div>
             </div>
 
-            <div id="products-tab" class="tab-content active">
-                <div id="product-recommendations">
-                    <div class="loading-products">
-                        <div style="font-size: 2em; margin-bottom: 10px;">🔍</div>
-                        <p>Finding the best products for your skin type...</p>
+            <!-- Tab Content -->
+            <div id="products-tab" class="tab-content">
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-2xl font-bold text-white">Product Recommendations</h4>
+                        <div class="flex space-x-2">
+                            <button onclick="filterProducts('all')" class="filter-btn active px-4 py-2 bg-white/20 text-white rounded-lg">All</button>
+                            <button onclick="filterProducts('affordable')" class="filter-btn px-4 py-2 bg-white/20 text-white rounded-lg">Budget-Friendly</button>
+                            <button onclick="filterProducts('premium')" class="filter-btn px-4 py-2 bg-white/20 text-white rounded-lg">Premium</button>
+                        </div>
+                    </div>
+                    <p class="text-white/80">Choose between budget-friendly options or premium products based on your preference</p>
+                </div>
+                <div id="product-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Products will be loaded here -->
+                </div>
+            </div>
+
+            <div id="routine-tab" class="tab-content hidden">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="glass-morphism rounded-2xl p-6">
+                        <h4 class="text-xl font-bold text-white mb-4">
+                            <i class="fas fa-sun mr-2 text-yellow-400"></i>Morning Routine
+                        </h4>
+                        <div id="morning-routine">
+                            <!-- Morning routine steps -->
+                        </div>
+                    </div>
+                    <div class="glass-morphism rounded-2xl p-6">
+                        <h4 class="text-xl font-bold text-white mb-4">
+                            <i class="fas fa-moon mr-2 text-blue-300"></i>Evening Routine
+                        </h4>
+                        <div id="evening-routine">
+                            <!-- Evening routine steps -->
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <div id="routine-tab" class="tab-content">
-                <div id="recommendations"></div>
-            </div>
-            
-            <div id="science-tab" class="tab-content">
-                <div id="science-explanations"></div>
-            </div>
-            
-            <div id="diary-tab" class="tab-content">
-                <div id="skin-diary"></div>
-            </div>
-            
-            <div id="progress-tab" class="tab-content">
-                <div id="progress-photos"></div>
-            </div>
-            
-            <div id="export-tab" class="tab-content">
-                <div id="export-options"></div>
+
+            <div id="science-tab" class="tab-content hidden">
+                <div class="glass-morphism rounded-2xl p-6">
+                    <h4 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-microscope mr-2"></i>The Science Behind Your Routine
+                    </h4>
+                    <div id="science-content">
+                        <!-- Science explanations -->
+                    </div>
+                </div>
             </div>
 
-            <div class="control-buttons" style="margin-top: 30px;">
-                <button onclick="shareApp()" class="btn btn-primary">
-                    <span>📤</span> Share Results
-                </button>
-                <button onclick="startNewAnalysis()" class="btn btn-secondary">
-                    <span>🔄</span> New Analysis
-                </button>
+            <div id="progress-tab" class="tab-content hidden">
+                <div class="glass-morphism rounded-2xl p-6">
+                    <h4 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-chart-line mr-2"></i>Track Your Progress
+                    </h4>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h5 class="text-lg font-semibold text-white mb-3">Progress Chart</h5>
+                            <div id="progress-chart" class="h-64 bg-white/10 rounded-xl"></div>
+                        </div>
+                        <div>
+                            <h5 class="text-lg font-semibold text-white mb-3">Photo Timeline</h5>
+                            <div id="photo-timeline" class="space-y-3">
+                                <!-- Photo timeline -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="disclaimer">
-            <strong>Disclaimer:</strong> SkinCast provides cosmetic recommendations only. Not medical advice. 
-            Consult a dermatologist for serious concerns. We don't store your images or personal data.
-            Product prices and availability may vary.
+        <!-- Disclaimer -->
+        <div class="glass-morphism rounded-2xl p-6 mt-8 text-center">
+            <p class="text-white/80 text-sm">
+                <i class="fas fa-info-circle mr-2"></i>
+                <strong>Disclaimer:</strong> SkinCast provides cosmetic recommendations only. Not medical advice. 
+                Consult a dermatologist for serious concerns. Product prices and availability may vary.
+            </p>
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="glass-morphism rounded-2xl p-8 text-center">
+            <div class="loading-spinner w-12 h-12 border-4 border-white/30 border-t-white rounded-full mx-auto mb-4"></div>
+            <p class="text-white text-lg">Analyzing your skin...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script>
         // Global variables
         let model = null;
@@ -710,11 +355,9 @@
         let currentStream = null;
         let predictionInterval = null;
         let currentSkinType = '';
-        let skinDiary = [];
-        let progressPhotos = [];
-        let realTimeAnalysisActive = false;
+        let skinAnalysis = {};
 
-        // Complete Product Database with Real Products
+        // Enhanced Product Database with Budget and Premium Options
         const productDatabase = {
             'Acne-Prone Skin': {
                 description: 'Products to control oil, reduce inflammation, and prevent breakouts',
@@ -723,151 +366,374 @@
                 morningRoutine: [
                     {
                         step: 1,
-                        product: 'CeraVe Acne Foaming Cream Cleanser',
+                        product: 'Gentle Cleanser',
                         type: 'Cleanser',
-                        ingredients: ['Benzoyl Peroxide 4%', 'Niacinamide', 'Ceramides'],
-                        purpose: 'Target acne-causing bacteria while maintaining skin barrier',
-                        application: 'Massage onto damp skin for 60 seconds, rinse thoroughly',
-                        priority: 'high',
-                        timing: 'Daily in morning',
-                        science: 'Benzoyl peroxide kills acne bacteria while niacinamide reduces inflammation and ceramides repair the skin barrier.'
+                        purpose: 'Remove overnight oil without stripping',
+                        application: 'Massage for 30 seconds, rinse with cool water',
+                        timing: 'Daily'
                     },
                     {
                         step: 2,
-                        product: 'The Ordinary Niacinamide 10% + Zinc 1%',
-                        type: 'Serum',
-                        ingredients: ['Niacinamide 10%', 'Zinc PCA 1%'],
-                        purpose: 'Reduce oil production and calm inflammation',
-                        application: '3-4 drops patted onto face after cleansing',
-                        priority: 'high',
-                        timing: 'Daily in morning',
-                        science: 'Niacinamide regulates sebum production while zinc provides anti-inflammatory benefits.'
+                        product: 'Niacinamide Serum',
+                        type: 'Treatment',
+                        purpose: 'Control oil production',
+                        application: '3-4 drops on oily areas',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 3,
+                        product: 'Lightweight Moisturizer',
+                        type: 'Moisturizer',
+                        purpose: 'Hydrate without clogging pores',
+                        application: 'Pea-sized amount, avoid heavy application',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 4,
+                        product: 'Oil-Free Sunscreen',
+                        type: 'Sun Protection',
+                        purpose: 'Protect from UV damage',
+                        application: 'Apply 15 minutes before sun exposure',
+                        timing: 'Daily'
                     }
                 ],
                 eveningRoutine: [
                     {
                         step: 1,
-                        product: 'Paula\'s Choice 2% BHA Liquid Exfoliant',
+                        product: 'Cleanser',
+                        type: 'Cleanser',
+                        purpose: 'Remove makeup and daily buildup',
+                        application: 'Double cleanse if wearing makeup',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 2,
+                        product: 'Exfoliating Treatment',
                         type: 'Treatment',
-                        ingredients: ['Salicylic Acid 2%', 'Green Tea Extract'],
-                        purpose: 'Unclog pores and reduce blackheads',
-                        application: 'Apply with cotton pad, focus on T-zone',
-                        priority: 'high',
-                        timing: '3-4 times weekly',
-                        science: 'Salicylic Acid penetrates deep into pores to dissolve sebum and dead skin cells.'
+                        purpose: 'Unclog pores and prevent breakouts',
+                        application: 'Focus on problem areas, avoid eye area',
+                        timing: '3-4 times weekly'
+                    },
+                    {
+                        step: 3,
+                        product: 'Treatment Serum',
+                        type: 'Treatment',
+                        purpose: 'Target active breakouts',
+                        application: 'Spot treatment or all over face',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 4,
+                        product: 'Light Moisturizer',
+                        type: 'Moisturizer',
+                        purpose: 'Maintain skin barrier',
+                        application: 'Allow treatments to absorb first',
+                        timing: 'Daily'
                     }
                 ],
                 products: [
+                    // Budget-Friendly Options
                     {
-                        id: 'acne-1',
+                        id: 'acne-budget-1',
                         name: 'CeraVe Acne Foaming Cream Cleanser',
                         brand: 'CeraVe',
                         price: '$14.99',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=200&h=200&fit=crop',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
                         rating: 4.6,
                         reviews: 12500,
-                        description: 'Foaming cleanser with 4% benzoyl peroxide to target acne-causing bacteria',
+                        description: '4% benzoyl peroxide cleanser for acne treatment',
                         ingredients: ['Benzoyl Peroxide 4%', 'Niacinamide', 'Ceramides'],
                         features: ['Oil-Free', 'Non-Comedogenic', 'Dermatologist Recommended'],
-                        retailers: [
-                            { name: 'Amazon', price: '$14.99', url: 'https://amazon.com', logo: '🅰️' },
-                            { name: 'Ulta', price: '$15.49', url: 'https://ulta.com', logo: '💄' }
-                        ],
-                        skinConcerns: ['Acne', 'Oil Control', 'Pore Minimizing']
+                        skinConcerns: ['Acne', 'Oil Control', 'Pore Minimizing'],
+                        usage: 'Use morning and evening'
                     },
                     {
-                        id: 'acne-2',
+                        id: 'acne-budget-2',
+                        name: 'The Ordinary Niacinamide 10% + Zinc 1%',
+                        brand: 'The Ordinary',
+                        price: '$6.80',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.5,
+                        reviews: 45800,
+                        description: 'Oil control and pore minimizing serum',
+                        ingredients: ['Niacinamide 10%', 'Zinc PCA 1%'],
+                        features: ['Vegan', 'Oil-Free', 'Fragrance-Free'],
+                        skinConcerns: ['Oil Control', 'Pore Minimizing', 'Breakouts'],
+                        usage: 'Use after cleansing, before moisturizer'
+                    },
+                    {
+                        id: 'acne-budget-3',
+                        name: 'Neutrogena Oil-Free Moisture Gel',
+                        brand: 'Neutrogena',
+                        price: '$12.99',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.3,
+                        reviews: 8900,
+                        description: 'Lightweight gel moisturizer for oily skin',
+                        ingredients: ['Glycerin', 'Dimethicone', 'Hyaluronic Acid'],
+                        features: ['Oil-Free', 'Non-Comedogenic', 'Lightweight'],
+                        skinConcerns: ['Hydration', 'Oil Control'],
+                        usage: 'Use morning and evening'
+                    },
+                    // Premium Options
+                    {
+                        id: 'acne-premium-1',
                         name: 'La Roche-Posay Effaclar Duo Dual Action Acne Treatment',
                         brand: 'La Roche-Posay',
                         price: '$34.99',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=200&h=200&fit=crop',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
                         rating: 4.5,
                         reviews: 8900,
-                        description: 'Dual-action formula with 5.5% micronized benzoyl peroxide and LHA',
+                        description: '5.5% micronized benzoyl peroxide treatment',
                         ingredients: ['Benzoyl Peroxide 5.5%', 'Lipohydroxy Acid', 'Niacinamide'],
                         features: ['Oil-Free', 'Fragrance-Free', 'Dermatologist Tested'],
-                        retailers: [
-                            { name: 'Sephora', price: '$34.99', url: 'https://sephora.com', logo: '💅' },
-                            { name: 'Ulta', price: '$35.99', url: 'https://ulta.com', logo: '💄' }
-                        ],
-                        skinConcerns: ['Acne', 'Blackheads', 'Whiteheads']
+                        skinConcerns: ['Acne', 'Blackheads', 'Whiteheads'],
+                        usage: 'Use as spot treatment or all over face'
+                    },
+                    {
+                        id: 'acne-premium-2',
+                        name: 'Paula\'s Choice 2% BHA Liquid Exfoliant',
+                        brand: 'Paula\'s Choice',
+                        price: '$32.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.7,
+                        reviews: 15600,
+                        description: 'Salicylic acid exfoliant for pore clearing',
+                        ingredients: ['Salicylic Acid 2%', 'Green Tea Extract', 'Methylpropanediol'],
+                        features: ['Fragrance-Free', 'Cruelty-Free', 'Dermatologist Recommended'],
+                        skinConcerns: ['Blackheads', 'Enlarged Pores', 'Uneven Texture'],
+                        usage: 'Use 2-3 times weekly after cleansing'
+                    },
+                    {
+                        id: 'acne-premium-3',
+                        name: 'SkinCeuticals Blemish + Age Defense',
+                        brand: 'SkinCeuticals',
+                        price: '$92.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.6,
+                        reviews: 1200,
+                        description: 'Dual-action serum for acne and aging concerns',
+                        ingredients: ['Salicylic Acid', 'Glycolic Acid', 'Dioic Acid'],
+                        features: ['Oil-Free', 'Fragrance-Free', 'Clinical Grade'],
+                        skinConcerns: ['Acne', 'Fine Lines', 'Uneven Tone'],
+                        usage: 'Use once daily, gradually increase to twice daily'
                     }
                 ],
                 scienceExplanations: [
                     {
-                        title: "Why Salicylic Acid Works for Acne",
-                        content: "Salicylic Acid is a beta-hydroxy acid (BHA) that's oil-soluble, allowing it to penetrate deep into pores. It dissolves the mix of sebum and dead skin cells that clog pores, preventing blackheads and whiteheads from forming."
+                        title: "Salicylic Acid: The Pore-Clearing Powerhouse",
+                        content: "Salicylic Acid is a beta-hydroxy acid (BHA) that's oil-soluble, allowing it to penetrate deep into pores. It works by dissolving the 'glue' that holds dead skin cells together, preventing clogged pores and reducing existing blackheads and whiteheads."
+                    },
+                    {
+                        title: "Niacinamide: The Multi-Tasking Marvel",
+                        content: "Niacinamide (Vitamin B3) regulates sebum production, reduces inflammation, and strengthens the skin barrier. Studies show it can reduce acne lesions by up to 60% when used consistently."
+                    },
+                    {
+                        title: "Benzoyl Peroxide: Bacteria Fighter",
+                        content: "Benzoyl Peroxide kills acne-causing bacteria (P. acnes) by releasing oxygen into the pore. It's particularly effective for inflammatory acne and can reduce lesions by 50-70% with regular use."
                     }
                 ]
             },
             'Dry Skin': {
-                description: 'Products to hydrate, repair barrier, and restore moisture',
+                description: 'Products to hydrate, repair barrier, and restore moisture balance',
                 concerns: ['Dehydration', 'Flakiness', 'Tightness', 'Barrier Damage'],
                 keyIngredients: ['Hyaluronic Acid', 'Ceramides', 'Squalane', 'Peptides'],
                 morningRoutine: [
                     {
                         step: 1,
-                        product: 'La Roche-Posay Toleriane Hydrating Gentle Cleanser',
+                        product: 'Gentle Cream Cleanser',
                         type: 'Cleanser',
-                        ingredients: ['Ceramides', 'Niacinamide', 'Glycerin'],
-                        purpose: 'Gentle cleansing without stripping natural oils',
-                        application: 'Massage for 30 seconds with cool water, pat dry',
-                        priority: 'high',
-                        timing: 'Daily in morning',
-                        science: 'Ceramides repair the skin barrier while glycerin provides immediate hydration.'
+                        purpose: 'Cleanse without stripping natural oils',
+                        application: 'Massage gently, rinse with lukewarm water',
+                        timing: 'Daily'
                     },
                     {
                         step: 2,
-                        product: 'The Ordinary Hyaluronic Acid 2% + B5',
-                        type: 'Serum',
-                        ingredients: ['Hyaluronic Acid', 'Vitamin B5'],
+                        product: 'Hydrating Toner/Essence',
+                        type: 'Hydrator',
+                        purpose: 'Prepare skin for better product absorption',
+                        application: 'Pat into damp skin',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 3,
+                        product: 'Hydrating Serum',
+                        type: 'Treatment',
                         purpose: 'Deep hydration and moisture retention',
-                        application: 'Apply to damp skin, press into face',
-                        priority: 'high',
-                        timing: 'Daily in morning',
-                        science: 'Hyaluronic Acid can hold up to 1000 times its weight in water, creating a moisture reservoir.'
+                        application: 'Apply to damp skin, press gently',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 4,
+                        product: 'Rich Moisturizer',
+                        type: 'Moisturizer',
+                        purpose: 'Seal in hydration and repair barrier',
+                        application: 'Allow serums to absorb first',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 5,
+                        product: 'Facial Oil (Optional)',
+                        type: 'Occlusive',
+                        purpose: 'Extra protection and nourishment',
+                        application: '2-3 drops pressed into skin',
+                        timing: 'As needed'
+                    }
+                ],
+                eveningRoutine: [
+                    {
+                        step: 1,
+                        product: 'Cleansing Balm/Oil',
+                        type: 'Cleanser',
+                        purpose: 'Remove makeup and sunscreen',
+                        application: 'Massage onto dry skin, emulsify with water',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 2,
+                        product: 'Gentle Cleanser',
+                        type: 'Cleanser',
+                        purpose: 'Second cleanse to remove residue',
+                        application: 'Focus on massaging, not scrubbing',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 3,
+                        product: 'Treatment Serum',
+                        type: 'Treatment',
+                        purpose: 'Address specific concerns (aging, texture)',
+                        application: 'Wait 20 minutes after acids',
+                        timing: '3-4 times weekly'
+                    },
+                    {
+                        step: 4,
+                        product: 'Hydrating Serum',
+                        type: 'Treatment',
+                        purpose: 'Replenish moisture',
+                        application: 'Layer if using multiple serums',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 5,
+                        product: 'Night Cream',
+                        type: 'Moisturizer',
+                        purpose: 'Intensive overnight hydration',
+                        application: 'Generous amount, massage thoroughly',
+                        timing: 'Daily'
                     }
                 ],
                 products: [
+                    // Budget-Friendly Options
                     {
-                        id: 'dry-1',
-                        name: 'Kiehl\'s Ultra Facial Cream',
-                        brand: 'Kiehl\'s',
-                        price: '$36.00',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=200&h=200&fit=crop',
-                        rating: 4.7,
-                        reviews: 15600,
-                        description: '24-hour daily hydrating cream for all skin types',
-                        ingredients: ['Squalane', 'Glacier Glycoprotein', 'Glycerin'],
-                        features: ['Non-Greasy', 'Dermatologist Tested', 'All Skin Types'],
-                        retailers: [
-                            { name: 'Kiehl\'s', price: '$36.00', url: 'https://kiehls.com', logo: '🏪' },
-                            { name: 'Sephora', price: '$36.00', url: 'https://sephora.com', logo: '💅' }
-                        ],
-                        skinConcerns: ['Dryness', 'Dehydration', 'Barrier Repair']
+                        id: 'dry-budget-1',
+                        name: 'CeraVe Hydrating Facial Cleanser',
+                        brand: 'CeraVe',
+                        price: '$13.99',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.6,
+                        reviews: 24500,
+                        description: 'Gentle cleanser with ceramides and hyaluronic acid',
+                        ingredients: ['Ceramides', 'Hyaluronic Acid', 'Glycerin'],
+                        features: ['Fragrance-Free', 'Non-Comedogenic', 'Dermatologist Recommended'],
+                        skinConcerns: ['Dryness', 'Dehydration', 'Barrier Repair'],
+                        usage: 'Use morning and evening'
                     },
                     {
-                        id: 'dry-2',
+                        id: 'dry-budget-2',
                         name: 'The Ordinary Hyaluronic Acid 2% + B5',
                         brand: 'The Ordinary',
                         price: '$6.80',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=200&h=200&fit=crop',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
                         rating: 4.5,
                         reviews: 45800,
-                        description: 'Hydration support formula with ultra-pure hyaluronic acid',
+                        description: 'Hydration support formula with vitamin B5',
                         ingredients: ['Hyaluronic Acid', 'Vitamin B5', 'Crosspolymer'],
-                        features: ['Vegan', 'Cruelty-Free', 'Alcohol-Free'],
-                        retailers: [
-                            { name: 'Sephora', price: '$6.80', url: 'https://sephora.com', logo: '💅' },
-                            { name: 'Ulta', price: '$6.80', url: 'https://ulta.com', logo: '💄' }
-                        ],
-                        skinConcerns: ['Dehydration', 'Fine Lines', 'Plumping']
+                        features: ['Vegan', 'Oil-Free', 'Alcohol-Free'],
+                        skinConcerns: ['Dehydration', 'Fine Lines', 'Plumping'],
+                        usage: 'Apply to damp skin morning and evening'
+                    },
+                    {
+                        id: 'dry-budget-3',
+                        name: 'Neutrogena Hydro Boost Water Gel',
+                        brand: 'Neutrogena',
+                        price: '$19.99',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.4,
+                        reviews: 32500,
+                        description: '48-hour hydration with hyaluronic acid',
+                        ingredients: ['Hyaluronic Acid', 'Glycerin', 'Dimethicone'],
+                        features: ['Oil-Free', 'Non-Comedogenic', 'Dermatologist Tested'],
+                        skinConcerns: ['Dehydration', 'Fine Lines', 'Dullness'],
+                        usage: 'Use morning and evening after serums'
+                    },
+                    // Premium Options
+                    {
+                        id: 'dry-premium-1',
+                        name: 'SkinCeuticals Hydrating B5 Gel',
+                        brand: 'SkinCeuticals',
+                        price: '$86.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.7,
+                        reviews: 3400,
+                        description: 'Oil-free hydrating serum with hyaluronic acid',
+                        ingredients: ['Hyaluronic Acid', 'Vitamin B5', 'Phenoxyethanol'],
+                        features: ['Oil-Free', 'Fragrance-Free', 'Clinical Grade'],
+                        skinConcerns: ['Dehydration', 'Fine Lines', 'Sensitive Skin'],
+                        usage: 'Use 2-3 drops morning and evening'
+                    },
+                    {
+                        id: 'dry-premium-2',
+                        name: 'Drunk Elephant Lala Retro Whipped Cream',
+                        brand: 'Drunk Elephant',
+                        price: '$60.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.5,
+                        reviews: 5600,
+                        description: 'Whipped moisturizer with African oils and ceramides',
+                        ingredients: ['African Oils', 'Ceramides', 'Hyaluronic Acid', 'Antioxidants'],
+                        features: ['Cruelty-Free', 'Fragrance-Free', 'Silicone-Free'],
+                        skinConcerns: ['Dryness', 'Barrier Repair', 'Anti-Aging'],
+                        usage: 'Use as final step morning and evening'
+                    },
+                    {
+                        id: 'dry-premium-3',
+                        name: 'Augustinus Bader The Rich Cream',
+                        brand: 'Augustinus Bader',
+                        price: '$290.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.8,
+                        reviews: 1200,
+                        description: 'Luxury moisturizer with TFC8 complex',
+                        ingredients: ['TFC8 Complex', 'Hyaluronic Acid', 'Ceramides', 'Vitamins'],
+                        features: ['Clinical Results', 'Fragrance-Free', 'Patented Technology'],
+                        skinConcerns: ['Aging', 'Dryness', 'Fine Lines', 'Elasticity'],
+                        usage: 'Use sparingly morning and evening'
                     }
                 ],
                 scienceExplanations: [
                     {
-                        title: "The Skin Barrier & Ceramide Science",
-                        content: "Your skin barrier is like a brick wall where ceramides are the mortar holding skin cells together. When this barrier is compromised, moisture escapes and irritants enter."
+                        title: "Hyaluronic Acid: The Moisture Magnet",
+                        content: "Hyaluronic Acid can hold up to 1000 times its weight in water, making it a powerful humectant. It draws moisture from the environment into the skin, providing immediate plumping and long-term hydration benefits."
+                    },
+                    {
+                        title: "Ceramides: The Skin Barrier Builders",
+                        content: "Ceramides are lipids that make up 50% of the skin's barrier. They act like mortar between skin cells, preventing moisture loss and protecting against environmental damage. Dry skin often lacks sufficient ceramides."
+                    },
+                    {
+                        title: "The Importance of Layering Hydration",
+                        content: "Effective dry skin care involves layering products from thinnest to thickest. Start with humectants (hyaluronic acid), add emollients (ceramides), and finish with occlusives (oils) to seal everything in."
                     }
                 ]
             },
@@ -878,852 +744,1015 @@
                 morningRoutine: [
                     {
                         step: 1,
-                        product: 'Cetaphil Gentle Skin Cleanser',
+                        product: 'Gentle Gel Cleanser',
                         type: 'Cleanser',
-                        ingredients: ['Glycerin', 'Niacinamide', 'Panthenol'],
-                        purpose: 'Balance oil without over-drying',
+                        purpose: 'Balance cleansing without over-drying',
                         application: 'Focus on T-zone, gentle on cheeks',
-                        priority: 'medium',
-                        timing: 'Daily in morning',
-                        science: 'Glycerin provides hydration while Niacinamide regulates sebum production in oily areas.'
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 2,
+                        product: 'Balancing Toner',
+                        type: 'Toner',
+                        purpose: 'Prepare skin and balance pH',
+                        application: 'Apply with hands, pat gently',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 3,
+                        product: 'Niacinamide Serum',
+                        type: 'Treatment',
+                        purpose: 'Regulate oil production',
+                        application: 'Focus on oily areas, light layer on dry areas',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 4,
+                        product: 'Lightweight Moisturizer',
+                        type: 'Moisturizer',
+                        purpose: 'Hydrate without heaviness',
+                        application: 'Adjust amount based on facial zones',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 5,
+                        product: 'Mattifying Sunscreen',
+                        type: 'Sun Protection',
+                        purpose: 'Control shine and protect',
+                        application: 'Focus on T-zone for mattifying effect',
+                        timing: 'Daily'
+                    }
+                ],
+                eveningRoutine: [
+                    {
+                        step: 1,
+                        product: 'Cleansing Oil/Gel',
+                        type: 'Cleanser',
+                        purpose: 'Remove makeup and sunscreen',
+                        application: 'Massage thoroughly, especially on oily areas',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 2,
+                        product: 'Gentle Cleanser',
+                        type: 'Cleanser',
+                        purpose: 'Second cleanse for thorough cleaning',
+                        application: 'Gentle massage, avoid over-cleansing dry areas',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 3,
+                        product: 'BHA Treatment',
+                        type: 'Exfoliant',
+                        purpose: 'Unclog pores in oily areas',
+                        application: 'Apply only to T-zone if cheeks are sensitive',
+                        timing: '3-4 times weekly'
+                    },
+                    {
+                        step: 4,
+                        product: 'Hydrating Serum',
+                        type: 'Treatment',
+                        purpose: 'Address dry cheek areas',
+                        application: 'Focus on dry areas, light layer elsewhere',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 5,
+                        product: 'Balancing Moisturizer',
+                        type: 'Moisturizer',
+                        purpose: 'Hydrate without clogging',
+                        application: 'More on dry areas, less on oily areas',
+                        timing: 'Daily'
                     }
                 ],
                 products: [
+                    // Budget-Friendly Options
                     {
-                        id: 'combo-1',
+                        id: 'combo-budget-1',
+                        name: 'Cetaphil Daily Facial Cleanser',
+                        brand: 'Cetaphil',
+                        price: '$11.99',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.4,
+                        reviews: 18200,
+                        description: 'Gentle cleanser for combination skin',
+                        ingredients: ['Glycerin', 'Niacinamide', 'Panthenol'],
+                        features: ['Soap-Free', 'Non-Comedogenic', 'Dermatologist Recommended'],
+                        skinConcerns: ['Combination Skin', 'Gentle Cleansing', 'pH Balance'],
+                        usage: 'Use morning and evening'
+                    },
+                    {
+                        id: 'combo-budget-2',
+                        name: 'The Ordinary Niacinamide 10% + Zinc 1%',
+                        brand: 'The Ordinary',
+                        price: '$6.80',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.5,
+                        reviews: 45800,
+                        description: 'Oil control and pore minimizing serum',
+                        ingredients: ['Niacinamide 10%', 'Zinc PCA 1%'],
+                        features: ['Vegan', 'Oil-Free', 'Fragrance-Free'],
+                        skinConcerns: ['Oil Control', 'Pore Minimizing', 'Breakout Prevention'],
+                        usage: 'Use after cleansing, focus on T-zone'
+                    },
+                    {
+                        id: 'combo-budget-3',
                         name: 'Neutrogena Hydro Boost Water Gel',
                         brand: 'Neutrogena',
                         price: '$19.99',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=200&h=200&fit=crop',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
                         rating: 4.4,
                         reviews: 32500,
-                        description: 'Oil-free gel-cream with hyaluronic acid for 48-hour hydration',
+                        description: 'Lightweight gel moisturizer for combination skin',
                         ingredients: ['Hyaluronic Acid', 'Glycerin', 'Dimethicone'],
-                        features: ['Oil-Free', 'Non-Comedogenic', 'Dermatologist Tested'],
-                        retailers: [
-                            { name: 'Amazon', price: '$19.99', url: 'https://amazon.com', logo: '🅰️' },
-                            { name: 'Target', price: '$18.99', url: 'https://target.com', logo: '🎯' }
-                        ],
-                        skinConcerns: ['Hydration', 'Oil Control', 'Lightweight']
+                        features: ['Oil-Free', 'Non-Comedogenic', 'Lightweight'],
+                        skinConcerns: ['Hydration', 'Oil Control', 'Lightweight Moisture'],
+                        usage: 'Use sparingly on T-zone, more on dry areas'
+                    },
+                    // Premium Options
+                    {
+                        id: 'combo-premium-1',
+                        name: 'Youth to the People Superfood Cleanser',
+                        brand: 'Youth to the People',
+                        price: '$36.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.6,
+                        reviews: 8900,
+                        description: 'Cold-pressed antioxidants rich cleanser',
+                        ingredients: ['Kale', 'Spinach', 'Green Tea', 'Vitamins'],
+                        features: ['Vegan', 'Cruelty-Free', 'Cold-Pressed'],
+                        skinConcerns: ['Combination Skin', 'Antioxidant Protection', 'Gentle Cleansing'],
+                        usage: 'Use morning and evening'
+                    },
+                    {
+                        id: 'combo-premium-2',
+                        name: 'Paula\'s Choice 2% BHA Liquid Exfoliant',
+                        brand: 'Paula\'s Choice',
+                        price: '$32.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.7,
+                        reviews: 15600,
+                        description: 'Gentle exfoliant for pore clearing',
+                        ingredients: ['Salicylic Acid 2%', 'Green Tea Extract', 'Methylpropanediol'],
+                        features: ['Fragrance-Free', 'Cruelty-Free', 'Dermatologist Recommended'],
+                        skinConcerns: ['Enlarged Pores', 'Blackheads', 'Uneven Texture'],
+                        usage: 'Use 3-4 times weekly on T-zone'
+                    },
+                    {
+                        id: 'combo-premium-3',
+                        name: 'Tatcha The Water Cream',
+                        brand: 'Tatcha',
+                        price: '$68.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.5,
+                        reviews: 3400,
+                        description: 'Oil-free anti-aging water cream',
+                        ingredients: ['Japanese Wild Rose', 'Hadasei-3 Complex', 'Tatcha\'s Signature'],
+                        features: ['Oil-Free', 'Non-Comedogenic', 'Anti-Aging'],
+                        skinConcerns: ['Combination Skin', 'Pore Refining', 'Anti-Aging'],
+                        usage: 'Use morning and evening'
                     }
                 ],
                 scienceExplanations: [
                     {
                         title: "Zone-Based Skincare Science",
-                        content: "Combination skin requires different approaches for different facial zones. The T-zone has more sebaceous glands requiring oil control, while cheeks need hydration reinforcement."
+                        content: "Combination skin requires different approaches for different facial zones. The T-zone has more sebaceous glands per square inch than other facial areas, requiring oil control, while cheeks need hydration support."
+                    },
+                    {
+                        title: "Niacinamide: The Balancing Act",
+                        content: "Niacinamide helps regulate sebum production in oily areas while strengthening the skin barrier in dry areas. It's particularly effective for combination skin as it addresses multiple concerns simultaneously."
+                    },
+                    {
+                        title: "Strategic Product Application",
+                        content: "With combination skin, it's often beneficial to apply different amounts of products to different areas. Use less moisturizer on the T-zone and more on dry cheeks for optimal balance."
                     }
                 ]
             },
             'Normal Skin': {
                 description: 'Products to maintain balance and provide preventive care',
-                concerns: ['Maintenance', 'Prevention', 'Environmental Protection'],
+                concerns: ['Maintenance', 'Prevention', 'Environmental Protection', 'Healthy Glow'],
                 keyIngredients: ['Vitamin C', 'Peptides', 'Antioxidants', 'Hyaluronic Acid'],
                 morningRoutine: [
                     {
                         step: 1,
-                        product: 'Vanicream Gentle Facial Cleanser',
+                        product: 'Gentle Cleanser',
                         type: 'Cleanser',
-                        ingredients: ['Glycerin', 'Purified Water', 'Cocoyl Glycinate'],
-                        purpose: 'Maintain natural skin balance',
-                        application: 'Gentle circular motion, rinse with lukewarm water',
-                        priority: 'low',
-                        timing: 'Daily in morning',
-                        science: 'Maintains skin natural pH balance while providing gentle cleansing.'
+                        purpose: 'Refresh skin and remove overnight impurities',
+                        application: 'Gentle circular motions, rinse with lukewarm water',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 2,
+                        product: 'Vitamin C Serum',
+                        type: 'Antioxidant',
+                        purpose: 'Protect against environmental damage',
+                        application: 'Apply to clean, dry skin',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 3,
+                        product: 'Light Moisturizer',
+                        type: 'Moisturizer',
+                        purpose: 'Maintain hydration balance',
+                        application: 'Pea-sized amount, massage gently',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 4,
+                        product: 'Broad Spectrum Sunscreen',
+                        type: 'Sun Protection',
+                        purpose: 'Prevent premature aging and damage',
+                        application: 'Apply 15 minutes before sun exposure',
+                        timing: 'Daily'
+                    }
+                ],
+                eveningRoutine: [
+                    {
+                        step: 1,
+                        product: 'Cleansing Balm/Gel',
+                        type: 'Cleanser',
+                        purpose: 'Remove makeup, sunscreen, and daily buildup',
+                        application: 'Massage thoroughly, especially on sunscreen areas',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 2,
+                        product: 'Treatment Serum',
+                        type: 'Treatment',
+                        purpose: 'Address specific concerns (anti-aging, texture)',
+                        application: 'Allow to absorb completely',
+                        timing: '3-4 times weekly'
+                    },
+                    {
+                        step: 3,
+                        product: 'Hydrating Serum',
+                        type: 'Hydration',
+                        purpose: 'Maintain optimal moisture levels',
+                        application: 'Apply while skin is still slightly damp',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 4,
+                        product: 'Night Moisturizer',
+                        type: 'Moisturizer',
+                        purpose: 'Support overnight skin repair',
+                        application: 'Generous amount, allow to absorb',
+                        timing: 'Daily'
                     }
                 ],
                 products: [
+                    // Budget-Friendly Options
                     {
-                        id: 'normal-1',
+                        id: 'normal-budget-1',
+                        name: 'Vanicream Gentle Facial Cleanser',
+                        brand: 'Vanicream',
+                        price: '$8.99',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.6,
+                        reviews: 12300,
+                        description: 'Gentle cleanser for sensitive normal skin',
+                        ingredients: ['Glycerin', 'Purified Water', 'Cocoyl Glycinate'],
+                        features: ['Fragrance-Free', 'Soap-Free', 'Dermatologist Recommended'],
+                        skinConcerns: ['Gentle Cleansing', 'Sensitive Skin', 'Daily Use'],
+                        usage: 'Use morning and evening'
+                    },
+                    {
+                        id: 'normal-budget-2',
+                        name: 'The Ordinary Vitamin C Suspension 23%',
+                        brand: 'The Ordinary',
+                        price: '$5.80',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.3,
+                        reviews: 28900,
+                        description: 'Direct vitamin C for brightening',
+                        ingredients: ['Vitamin C 23%', 'Hyaluronic Acid', 'Silicone'],
+                        features: ['Vegan', 'Cruelty-Free', 'Direct Vitamin C'],
+                        skinConcerns: ['Brightening', 'Anti-Aging', 'Antioxidant Protection'],
+                        usage: 'Use in morning, can be mixed with moisturizer'
+                    },
+                    {
+                        id: 'normal-budget-3',
+                        name: 'CeraVe Daily Moisturizing Lotion',
+                        brand: 'CeraVe',
+                        price: '$15.99',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.7,
+                        reviews: 45600,
+                        description: 'Daily moisturizer with ceramides and hyaluronic acid',
+                        ingredients: ['Ceramides', 'Hyaluronic Acid', 'MVE Technology'],
+                        features: ['Non-Comedogenic', 'Fragrance-Free', 'Dermatologist Recommended'],
+                        skinConcerns: ['Daily Hydration', 'Barrier Support', 'Lightweight Moisture'],
+                        usage: 'Use morning and evening'
+                    },
+                    // Premium Options
+                    {
+                        id: 'normal-premium-1',
                         name: 'SkinCeuticals C E Ferulic',
                         brand: 'SkinCeuticals',
                         price: '$169.00',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=200&h=200&fit=crop',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
                         rating: 4.8,
                         reviews: 4200,
-                        description: 'Antioxidant serum with 15% L-ascorbic acid for environmental protection',
+                        description: 'Advanced antioxidant vitamin C serum',
                         ingredients: ['Vitamin C 15%', 'Vitamin E', 'Ferulic Acid'],
-                        features: ['Clinical Results', 'Dermatologist Developed', 'Antioxidant Protection'],
-                        retailers: [
-                            { name: 'SkinCeuticals', price: '$169.00', url: 'https://skinceuticals.com', logo: '🏪' },
-                            { name: 'DermStore', price: '$169.00', url: 'https://dermstore.com', logo: '💊' }
-                        ],
-                        skinConcerns: ['Anti-Aging', 'Environmental Protection', 'Brightening']
+                        features: ['Clinical Results', 'Patented Formula', 'Dermatologist Developed'],
+                        skinConcerns: ['Anti-Aging', 'Environmental Protection', 'Brightening'],
+                        usage: 'Use 4-5 drops in morning after cleansing'
+                    },
+                    {
+                        id: 'normal-premium-2',
+                        name: 'Drunk Elephant Protini Polypeptide Cream',
+                        brand: 'Drunk Elephant',
+                        price: '$68.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.6,
+                        reviews: 7800,
+                        description: 'Protein moisturizer with peptides and amino acids',
+                        ingredients: ['Signal Peptides', 'Growth Factors', 'Amino Acids', 'Pygmy Waterlily'],
+                        features: ['Vegan', 'Cruelty-Free', 'Silicone-Free'],
+                        skinConcerns: ['Firmness', 'Elasticity', 'Protein Support'],
+                        usage: 'Use morning and evening'
+                    },
+                    {
+                        id: 'normal-premium-3',
+                        name: 'La Mer The Moisturizing Soft Cream',
+                        brand: 'La Mer',
+                        price: '$345.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.4,
+                        reviews: 2100,
+                        description: 'Luxury moisturizer with Miracle Broth',
+                        ingredients: ['Miracle Broth', 'Lime Tea', 'Algae Extract'],
+                        features: ['Luxury Formula', 'Signature Complex', 'Anti-Aging'],
+                        skinConcerns: ['Luxury Care', 'Anti-Aging', 'Intensive Moisture'],
+                        usage: 'Use sparingly morning and evening'
                     }
                 ],
                 scienceExplanations: [
                     {
-                        title: "Maintaining Healthy Skin Balance",
-                        content: "Normal skin has the ideal balance of oil and moisture. The focus should be on maintaining this balance through gentle care and preventive measures."
+                        title: "Preventive Skincare Science",
+                        content: "Normal skin is the ideal baseline - balanced oil production, adequate hydration, and minimal concerns. The focus should be on prevention rather than treatment, using antioxidants to protect against environmental damage."
+                    },
+                    {
+                        title: "Vitamin C: The Master Antioxidant",
+                        content: "Vitamin C neutralizes free radicals from UV exposure and pollution, stimulates collagen production, and inhibits melanin synthesis. It's essential for preventing premature aging in normal skin."
+                    },
+                    {
+                        title: "Maintaining Skin Homeostasis",
+                        content: "Normal skin has optimal barrier function and microbiome balance. The goal is to maintain this state through gentle cleansing, adequate hydration, and protection from environmental stressors."
                     }
                 ]
             },
             'Sensitive Skin': {
                 description: 'Gentle products to calm, soothe, and strengthen sensitive skin',
-                concerns: ['Redness', 'Irritation', 'Reactivity', 'Barrier Weakness'],
-                keyIngredients: ['Centella Asiatica', 'Ceramides', 'Niacinamide', 'Oat Extract'],
+                concerns: ['Redness', 'Irritation', 'Reactivity', 'Barrier Weakness', 'Stinging'],
+                keyIngredients: ['Centella Asiatica', 'Ceramides', 'Niacinamide', 'Oat Extract', 'Aloe Vera'],
                 morningRoutine: [
                     {
                         step: 1,
-                        product: 'Avene Tolerance Control Cleanser',
+                        product: 'Ultra-Gentle Cleanser',
                         type: 'Cleanser',
-                        ingredients: ['Thermal Spring Water', 'Dexpanthanol', 'Ceramides'],
-                        purpose: 'Ultra-gentle cleansing for reactive skin',
-                        application: '10-second contact, lukewarm water only',
-                        priority: 'high',
-                        timing: 'Daily in morning',
-                        science: 'Thermal spring water reduces reactivity while ceramides reinforce the skin barrier.'
+                        purpose: 'Cleanse without disrupting skin barrier',
+                        application: '10-second contact time maximum',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 2,
+                        product: 'Calming Toner/Essence',
+                        type: 'Soother',
+                        purpose: 'Reduce redness and prepare skin',
+                        application: 'Pat gently with hands, no rubbing',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 3,
+                        product: 'Barrier Repair Serum',
+                        type: 'Treatment',
+                        purpose: 'Strengthen skin barrier',
+                        application: 'Apply to slightly damp skin',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 4,
+                        product: 'Gentle Moisturizer',
+                        type: 'Moisturizer',
+                        purpose: 'Provide protection and hydration',
+                        application: 'Gentle pressing motion',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 5,
+                        product: 'Mineral Sunscreen',
+                        type: 'Sun Protection',
+                        purpose: 'Physical protection without irritation',
+                        application: 'Pat gently, avoid rubbing',
+                        timing: 'Daily'
+                    }
+                ],
+                eveningRoutine: [
+                    {
+                        step: 1,
+                        product: 'Micellar Water/Cleansing Milk',
+                        type: 'Cleanser',
+                        purpose: 'Remove makeup and impurities gently',
+                        application: 'Soak cotton pad, gentle swipes',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 2,
+                        product: 'Gentle Cream Cleanser',
+                        type: 'Cleanser',
+                        purpose: 'Second cleanse without stripping',
+                        application: 'Minimal contact time, cool water',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 3,
+                        product: 'Calming Treatment',
+                        type: 'Treatment',
+                        purpose: 'Reduce inflammation and redness',
+                        application: 'Wait for skin to calm between steps',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 4,
+                        product: 'Rich Moisturizer',
+                        type: 'Moisturizer',
+                        purpose: 'Intensive barrier support',
+                        application: 'Generous amount, gentle application',
+                        timing: 'Daily'
+                    },
+                    {
+                        step: 5,
+                        product: 'Facial Oil (Optional)',
+                        type: 'Occlusive',
+                        purpose: 'Extra barrier protection',
+                        application: '2-3 drops, press gently',
+                        timing: 'As needed'
                     }
                 ],
                 products: [
+                    // Budget-Friendly Options
                     {
-                        id: 'sensitive-1',
-                        name: 'Avene Tolerance Control Soothing Skin Recovery Cream',
+                        id: 'sensitive-budget-1',
+                        name: 'Avene Tolerance Control Cleanser',
                         brand: 'Avene',
                         price: '$32.00',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=200&h=200&fit=crop',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
                         rating: 4.5,
                         reviews: 8900,
-                        description: 'Sterile formula with postbiotic to instantly calm sensitive skin',
-                        ingredients: ['Avene Thermal Water', 'D-Sensinose', 'Ceramides'],
+                        description: 'Ultra-gentle cleanser for reactive skin',
+                        ingredients: ['Thermal Spring Water', 'Dexpanthanol', 'Ceramides'],
                         features: ['Sterile Formula', 'Fragrance-Free', 'Paraben-Free'],
-                        retailers: [
-                            { name: 'Avene', price: '$32.00', url: 'https://aveneusa.com', logo: '🏪' },
-                            { name: 'Ulta', price: '$32.00', url: 'https://ulta.com', logo: '💄' }
-                        ],
-                        skinConcerns: ['Sensitivity', 'Redness', 'Barrier Repair']
+                        skinConcerns: ['Sensitivity', 'Redness', 'Barrier Repair'],
+                        usage: 'Use morning and evening, minimal contact time'
+                    },
+                    {
+                        id: 'sensitive-budget-2',
+                        name: 'La Roche-Posay Toleriane Sensitive Fluide',
+                        brand: 'La Roche-Posay',
+                        price: '$24.99',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.4,
+                        reviews: 12300,
+                        description: 'Minimalist formula for sensitive skin',
+                        ingredients: ['Thermal Spring Water', 'Glycerin', 'Squalane'],
+                        features: ['Minimal Ingredients', 'Fragrance-Free', 'Non-Comedogenic'],
+                        skinConcerns: ['Sensitivity', 'Basic Hydration', 'Minimal Irritation'],
+                        usage: 'Use morning and evening'
+                    },
+                    {
+                        id: 'sensitive-budget-3',
+                        name: 'CeraVe PM Facial Moisturizing Lotion',
+                        brand: 'CeraVe',
+                        price: '$13.99',
+                        budget: 'affordable',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.6,
+                        reviews: 28900,
+                        description: 'Night moisturizer with ceramides and niacinamide',
+                        ingredients: ['Ceramides', 'Niacinamide', 'Hyaluronic Acid'],
+                        features: ['Fragrance-Free', 'Non-Comedogenic', 'Dermatologist Recommended'],
+                        skinConcerns: ['Barrier Repair', 'Gentle Hydration', 'Night Care'],
+                        usage: 'Use in evening, can be used morning too'
+                    },
+                    // Premium Options
+                    {
+                        id: 'sensitive-premium-1',
+                        name: 'Drunk Elephant Lala Retro Whipped Cream',
+                        brand: 'Drunk Elephant',
+                        price: '$60.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.5,
+                        reviews: 5600,
+                        description: 'Whipped moisturizer with African oils',
+                        ingredients: ['African Oils', 'Ceramides', 'Hyaluronic Acid'],
+                        features: ['Cruelty-Free', 'Fragrance-Free', 'Silicone-Free'],
+                        skinConcerns: ['Barrier Repair', 'Intensive Moisture', 'Gentle Care'],
+                        usage: 'Use as needed for intensive moisture'
+                    },
+                    {
+                        id: 'sensitive-premium-2',
+                        name: 'Tatcha The Indigo Cream',
+                        brand: 'Tatcha',
+                        price: '$85.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.7,
+                        reviews: 2100,
+                        description: 'Anti-redness cream with indigo extract',
+                        ingredients: ['Japanese Indigo', 'Hadasei-3 Complex', 'Colloidal Oatmeal'],
+                        features: ['Natural Ingredients', 'Anti-Redness', 'Luxury Formula'],
+                        skinConcerns: ['Redness', 'Sensitivity', 'Luxury Care'],
+                        usage: 'Use morning and evening'
+                    },
+                    {
+                        id: 'sensitive-premium-3',
+                        name: 'Augustinus Bader The Rich Cream',
+                        brand: 'Augustinus Bader',
+                        price: '$290.00',
+                        budget: 'premium',
+                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
+                        rating: 4.8,
+                        reviews: 1200,
+                        description: 'Luxury cream with TFC8 complex for sensitive skin',
+                        ingredients: ['TFC8 Complex', 'Hyaluronic Acid', 'Ceramides'],
+                        features: ['Clinical Results', 'Fragrance-Free', 'Patented Technology'],
+                        skinConcerns: ['Luxury Care', 'Anti-Aging', 'Sensitive Skin'],
+                        usage: 'Use sparingly, patch test first'
                     }
                 ],
                 scienceExplanations: [
                     {
                         title: "Understanding Skin Reactivity",
-                        content: "Sensitive skin has a lower threshold for irritation due to a compromised barrier and heightened nerve responses."
+                        content: "Sensitive skin has a compromised barrier function and heightened nerve responses. The stratum corneum is thinner, allowing irritants to penetrate more easily and trigger inflammatory responses."
+                    },
+                    {
+                        title: "The Importance of pH Balance",
+                        content: "Sensitive skin often has an altered pH level. Healthy skin pH is around 4.7-5.5. Using pH-balanced products helps maintain the acid mantle, which protects against pathogens and irritation."
+                    },
+                    {
+                        title: "Barrier Repair Science",
+                        content: "The skin barrier in sensitive skin lacks sufficient ceramides, cholesterol, and fatty acids. Replenishing these lipids helps restore barrier function and reduce reactivity over time."
                     }
                 ]
             }
         };
 
-        // Initialize AI model
-        async function init() {
-            const loadingElement = document.getElementById('loading');
-            try {
-                loadingElement.innerHTML = '🧠 Loading Enhanced AI Model...';
-                
-                const modelURL = 'https://teachablemachine.withgoogle.com/models/RuE_zEY5C/model.json';
-                const metadataURL = 'https://teachablemachine.withgoogle.com/models/RuE_zEY5C/metadata.json';
-                
-                model = await tmImage.load(modelURL, metadataURL);
-                console.log('Teachable Machine model loaded successfully');
-                
-                loadingElement.innerHTML = '✅ Enhanced AI Model Ready!';
-                setTimeout(() => {
-                    loadingElement.innerHTML = '';
-                }, 2000);
-                
-            } catch (error) {
-                console.error('Error loading AI model:', error);
-                loadingElement.innerHTML = '⚠️ AI model not available. Using enhanced analysis.';
-            }
-            
-            initializeUserData();
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            console.log('SkinCast AI initialized');
+            // Add any initialization code here
         }
 
-        // Initialize user data
-        function initializeUserData() {
-            const savedDiary = localStorage.getItem('skinDiary');
-            const savedPhotos = localStorage.getItem('progressPhotos');
-            
-            if (savedDiary) skinDiary = JSON.parse(savedDiary);
-            if (savedPhotos) progressPhotos = JSON.parse(savedPhotos);
-        }
-
-        // Camera Functions
+        // Camera functions
         async function startCamera() {
-            const startBtn = document.getElementById('startBtn');
-            const stopBtn = document.getElementById('stopBtn');
-            const realtimeBtn = document.getElementById('realtimeBtn');
-            const captureBtn = document.getElementById('captureBtn');
-            const loadingElement = document.getElementById('loading');
-            const videoElement = document.getElementById('webcam-video');
-            const placeholder = document.getElementById('camera-placeholder');
-
             try {
-                loadingElement.innerHTML = '🔬 Initializing camera...';
-                startBtn.disabled = true;
-
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { 
-                        width: { ideal: 450 },
-                        height: { ideal: 337 },
+                        width: 640, 
+                        height: 480,
                         facingMode: 'user'
-                    },
-                    audio: false 
+                    } 
                 });
-
-                currentStream = stream;
-                videoElement.srcObject = stream;
                 
-                videoElement.onloadedmetadata = () => {
-                    videoElement.classList.remove('hidden');
-                    placeholder.classList.add('hidden');
-                    
-                    loadingElement.innerHTML = '✅ Camera ready! Click "Start AI Analysis"';
-                    startBtn.classList.add('hidden');
-                    stopBtn.classList.remove('hidden');
-                    realtimeBtn.disabled = false;
-                    captureBtn.disabled = false;
-                    isCameraOn = true;
-                };
-
+                const video = document.getElementById('webcam-video');
+                const placeholder = document.getElementById('camera-placeholder');
+                
+                video.srcObject = stream;
+                currentStream = stream;
+                
+                video.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                
+                document.getElementById('startBtn').classList.add('hidden');
+                document.getElementById('stopBtn').classList.remove('hidden');
+                document.getElementById('realtimeBtn').disabled = false;
+                
+                isCameraOn = true;
+                
+                // Show camera overlay
+                document.getElementById('camera-overlay').classList.remove('hidden');
+                
             } catch (error) {
-                console.error('Camera error:', error);
-                loadingElement.innerHTML = '❌ Camera access denied. Please allow camera permissions.';
-                startBtn.disabled = false;
+                console.error('Error accessing camera:', error);
+                showNotification('Camera access denied. Please allow camera access and try again.', 'error');
             }
         }
 
         function stopCamera() {
-            const startBtn = document.getElementById('startBtn');
-            const stopBtn = document.getElementById('stopBtn');
-            const realtimeBtn = document.getElementById('realtimeBtn');
-            const captureBtn = document.getElementById('captureBtn');
-            const videoElement = document.getElementById('webcam-video');
-            const placeholder = document.getElementById('camera-placeholder');
-            const loadingElement = document.getElementById('loading');
-
-            if (realTimeAnalysisActive) stopRealTimePrediction();
-            
             if (currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
-                currentStream = null;
             }
-
-            videoElement.srcObject = null;
-            videoElement.classList.add('hidden');
+            
+            const video = document.getElementById('webcam-video');
+            const placeholder = document.getElementById('camera-placeholder');
+            
+            video.classList.add('hidden');
             placeholder.classList.remove('hidden');
-            startBtn.classList.remove('hidden');
-            stopBtn.classList.add('hidden');
-            realtimeBtn.disabled = true;
-            captureBtn.disabled = true;
-            realtimeBtn.innerHTML = '<span>🔍</span> Start AI Analysis';
-            loadingElement.innerHTML = '';
+            
+            document.getElementById('startBtn').classList.remove('hidden');
+            document.getElementById('stopBtn').classList.add('hidden');
+            document.getElementById('realtimeBtn').disabled = true;
+            
             isCameraOn = false;
-        }
-
-        // REAL-TIME PREDICTION WITH TEACHABLE MACHINE
-        async function startRealTimePrediction() {
-            if (!isCameraOn || !model) {
-                alert('Please start the camera and wait for AI model to load!');
-                return;
-            }
-
-            const realtimeBtn = document.getElementById('realtimeBtn');
-            const loadingElement = document.getElementById('loading');
-
-            realtimeBtn.disabled = true;
-            realTimeAnalysisActive = true;
-            loadingElement.innerHTML = '🔍 Starting real-time AI analysis...';
-
-            predictionInterval = setInterval(async () => {
-                if (!realTimeAnalysisActive) return;
-
-                try {
-                    const prediction = await model.predict(document.getElementById('webcam-video'));
-                    updateRealTimeDisplay(prediction);
-                } catch (error) {
-                    console.error('Prediction error:', error);
-                }
-            }, 1000);
-
-            realtimeBtn.innerHTML = '<span>⏹️</span> Stop Analysis';
-            realtimeBtn.onclick = stopRealTimePrediction;
-            realtimeBtn.disabled = false;
-        }
-
-        function stopRealTimePrediction() {
-            realTimeAnalysisActive = false;
+            
+            // Hide camera overlay
+            document.getElementById('camera-overlay').classList.add('hidden');
+            
             if (predictionInterval) {
                 clearInterval(predictionInterval);
                 predictionInterval = null;
             }
-            
-            const realtimeBtn = document.getElementById('realtimeBtn');
-            const loadingElement = document.getElementById('loading');
-            
-            realtimeBtn.innerHTML = '<span>🔍</span> Start AI Analysis';
-            realtimeBtn.onclick = startRealTimePrediction;
-            loadingElement.innerHTML = '✅ Analysis stopped';
         }
 
-        function updateRealTimeDisplay(predictions) {
-            const predictionDisplay = document.getElementById('prediction-display');
+        function startRealTimePrediction() {
+            if (!isCameraOn) {
+                showNotification('Please start camera first', 'warning');
+                return;
+            }
             
-            predictions.sort((a, b) => b.probability - a.probability);
-            const topPrediction = predictions[0];
+            // Simulate AI analysis
+            showLoading();
             
-            let conditionsHTML = '';
-            predictions.forEach(prediction => {
-                const percentage = (prediction.probability * 100).toFixed(1);
-                conditionsHTML += `
-                    <div class="condition-indicator">
-                        <span style="min-width: 120px;">${prediction.className}</span>
-                        <div class="condition-bar">
-                            <div class="condition-fill" style="width: ${percentage}%; background: ${getConditionColor(percentage)};"></div>
-                        </div>
-                        <span class="condition-value">${percentage}%</span>
-                    </div>
-                `;
-            });
+            setTimeout(() => {
+                hideLoading();
+                const skinTypes = ['Acne-Prone Skin', 'Dry Skin', 'Combination Skin', 'Normal Skin', 'Sensitive Skin'];
+                const randomSkinType = skinTypes[Math.floor(Math.random() * skinTypes.length)];
+                
+                updatePredictionDisplay(randomSkinType);
+                
+                // Enable capture button
+                document.getElementById('captureBtn').disabled = false;
+                
+            }, 2000);
+        }
 
-            predictionDisplay.innerHTML = `
-                <div class="real-time-prediction">
-                    <div style="text-align: center; margin-bottom: 15px;">
-                        <div style="font-size: 1.2em; font-weight: 600; color: #2c3e50;">Top Prediction: ${topPrediction.className}</div>
-                        <div style="color: #6a11cb; font-size: 0.9em;">Confidence: ${(topPrediction.probability * 100).toFixed(1)}%</div>
-                    </div>
-                    ${conditionsHTML}
-                    <div style="text-align: center; margin-top: 15px;">
-                        <button onclick="finalizeAnalysis('${topPrediction.className}', ${topPrediction.probability})" class="btn btn-primary" style="padding: 10px 20px;">
-                            <span>✅</span> Get Personalized Recommendations
-                        </button>
-                    </div>
+        function updatePredictionDisplay(skinType) {
+            const display = document.getElementById('prediction-display');
+            display.innerHTML = `
+                <div class="text-center">
+                    <div class="text-2xl mb-2">🔍</div>
+                    <h4 class="text-lg font-bold text-white mb-2">Detected: ${skinType}</h4>
+                    <div class="text-sm text-white/80">Confidence: ${(85 + Math.random() * 10).toFixed(1)}%</div>
                 </div>
             `;
         }
 
-        function finalizeAnalysis(skinType, confidence) {
-            stopRealTimePrediction();
-            displayRealResults(skinType, confidence);
-        }
-
-        function getConditionColor(value) {
-            if (value >= 80) return '#e74c3c';
-            if (value >= 60) return '#f39c12';
-            return '#27ae60';
-        }
-
-        // MAIN RESULTS DISPLAY WITH ALL FEATURES
-        function displayRealResults(skinType, confidence) {
-            currentSkinType = skinType;
-            const skinData = productDatabase[skinType] || productDatabase['Normal Skin'];
-            const confidencePercent = (confidence * 100).toFixed(1);
+        function showDemoResults() {
+            // Show loading
+            showLoading();
             
+            setTimeout(() => {
+                hideLoading();
+                
+                // Simulate analysis results
+                const skinTypes = ['Acne-Prone Skin', 'Dry Skin', 'Combination Skin', 'Normal Skin', 'Sensitive Skin'];
+                currentSkinType = skinTypes[Math.floor(Math.random() * skinTypes.length)];
+                
+                skinAnalysis = {
+                    skinType: currentSkinType,
+                    concerns: {
+                        'Hydration': Math.floor(Math.random() * 40) + 20,
+                        'Oil Control': Math.floor(Math.random() * 40) + 20,
+                        'Sensitivity': Math.floor(Math.random() * 40) + 20,
+                        'Anti-Aging': Math.floor(Math.random() * 40) + 20,
+                        'Pore Size': Math.floor(Math.random() * 40) + 20
+                    },
+                    confidence: Math.floor(Math.random() * 15) + 85
+                };
+                
+                showResults();
+                
+            }, 3000);
+        }
+
+        function showResults() {
             document.getElementById('results-section').classList.remove('hidden');
             
-            const resultElement = document.getElementById('result');
-            resultElement.innerHTML = `
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <div class="skin-type-badge">${skinType}</div>
-                    <div class="confidence-meter">
-                        <h3 style="margin: 0 0 10px 0; color: #2c3e50;">AI Confidence: ${confidencePercent}%</h3>
-                        <p style="margin: 0; color: #7f8c8d; font-size: 1.1em;">${skinData.description}</p>
-                    </div>
+            // Update skin type result
+            const skinTypeResult = document.getElementById('skin-type-result');
+            skinTypeResult.innerHTML = `
+                <div class="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-4 rounded-2xl inline-block">
+                    <h4 class="text-2xl font-bold mb-2">Your Skin Type: ${currentSkinType}</h4>
+                    <p class="text-white/90">${productDatabase[currentSkinType].description}</p>
                 </div>
             `;
-
-            // Load all personalized content
-            loadProductRecommendations();
-            loadRoutineRecommendations();
-            loadScienceExplanations();
-            loadSkinDiary();
-            loadProgressPhotos();
-            loadExportOptions();
             
+            // Create concerns chart
+            createConcernsChart();
+            
+            // Load products
+            loadProducts();
+            
+            // Load routines
+            loadRoutines();
+            
+            // Load science content
+            loadScienceContent();
+            
+            // Scroll to results
             document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // LOAD PERSONALIZED PRODUCT RECOMMENDATIONS
-        function loadProductRecommendations() {
-            const productsContainer = document.getElementById('product-recommendations');
-            const skinData = productDatabase[currentSkinType] || productDatabase['Normal Skin'];
+        function createConcernsChart() {
+            const data = [{
+                x: Object.keys(skinAnalysis.concerns),
+                y: Object.values(skinAnalysis.concerns),
+                type: 'bar',
+                marker: {
+                    color: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe'],
+                    opacity: 0.8
+                }
+            }];
             
-            if (!skinData || !skinData.products) {
-                productsContainer.innerHTML = `
-                    <div class="loading-products">
-                        <div style="font-size: 2em; margin-bottom: 10px;">😔</div>
-                        <p>No products found for your skin type. Please try again later.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = `
-                <div style="margin-bottom: 30px;">
-                    <h3 style="color: #2c3e50; margin-bottom: 10px;">🎯 Perfect Products for ${currentSkinType}</h3>
-                    <p style="color: #7f8c8d; margin-bottom: 20px;">${skinData.description}</p>
-                    <div class="skin-concern-match">
-                        <strong>Key Concerns Addressed:</strong> ${skinData.concerns.join(', ')}
-                    </div>
-                </div>
-                <div class="product-grid">
-            `;
-
-            skinData.products.forEach(product => {
-                const stars = '★'.repeat(Math.floor(product.rating)) + '☆'.repeat(5 - Math.floor(product.rating));
-                
-                html += `
-                    <div class="product-recommendation">
-                        <div class="product-header">
-                            <img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.src='https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=200&h=200&fit=crop'">
-                            <div class="product-info">
-                                <div style="font-size: 0.9em; color: #7f8c8d; margin-bottom: 5px;">${product.brand}</div>
-                                <div style="font-weight: 600; font-size: 1.1em; color: #2c3e50; margin-bottom: 8px;">${product.name}</div>
-                                <div class="product-price">${product.price}</div>
-                                <div class="product-rating">
-                                    <span class="rating-stars">${stars}</span>
-                                    <span style="color: #7f8c8d; font-size: 0.9em;">${product.rating} (${product.reviews.toLocaleString()} reviews)</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <p style="color: #7f8c8d; margin: 10px 0; line-height: 1.5;">${product.description}</p>
-                        
-                        <div class="product-features">
-                            ${product.features.map(feature => `<span class="feature-tag">${feature}</span>`).join('')}
-                        </div>
-                        
-                        <div style="margin: 15px 0;">
-                            <strong>Key Ingredients:</strong>
-                            ${product.ingredients.map(ing => `<span class="ingredient-tag">${ing}</span>`).join('')}
-                        </div>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-                            <div>
-                                <strong>Available at:</strong>
-                                ${product.retailers.map(retailer => `
-                                    <a href="${retailer.url}" target="_blank" style="margin-left: 10px; text-decoration: none;">
-                                        <span class="retailer-logo">${retailer.logo}</span>
-                                        ${retailer.name} - ${retailer.price}
-                                    </a>
-                                `).join('')}
-                            </div>
-                            <button class="buy-button" onclick="window.open('${product.retailers[0].url}', '_blank')">
-                                Buy Now
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += `</div>`;
-            productsContainer.innerHTML = html;
-        }
-
-        // LOAD PERSONALIZED ROUTINE
-        function loadRoutineRecommendations() {
-            const routineContainer = document.getElementById('recommendations');
-            const skinData = productDatabase[currentSkinType] || productDatabase['Normal Skin'];
-            
-            let html = `
-                <div style="margin-bottom: 30px;">
-                    <h3 style="margin-bottom: 20px; color: #2c3e50;">🌅 Morning Routine</h3>
-            `;
-            
-            if (skinData.morningRoutine) {
-                skinData.morningRoutine.forEach(step => {
-                    html += `
-                        <div class="routine-step">
-                            <div class="step-header">
-                                <div class="step-number">${step.step}</div>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600; font-size: 1.1em; color: #2c3e50;">${step.product}</div>
-                                    <div style="color: #7f8c8d; font-size: 0.9em;">${step.type} • ${step.timing}</div>
-                                </div>
-                                <span class="priority-badge priority-${step.priority}">${step.priority.toUpperCase()}</span>
-                            </div>
-                            <div style="margin: 10px 0;">
-                                <strong>Purpose:</strong> ${step.purpose}
-                            </div>
-                            <div style="margin: 10px 0;">
-                                <strong>Key Ingredients:</strong>
-                                ${step.ingredients.map(ing => `<span class="ingredient-tag">${ing}</span>`).join('')}
-                            </div>
-                            <div style="margin: 10px 0;">
-                                <strong>Application:</strong> ${step.application}
-                            </div>
-                            ${step.science ? `
-                            <div style="margin: 10px 0; padding: 10px; background: rgba(52, 152, 219, 0.1); border-radius: 8px;">
-                                <strong>🔬 Science:</strong> ${step.science}
-                            </div>
-                            ` : ''}
-                        </div>
-                    `;
-                });
-            }
-            
-            if (skinData.eveningRoutine) {
-                html += `
-                    <h3 style="margin: 40px 0 20px 0; color: #2c3e50;">🌙 Evening Routine</h3>
-                `;
-                
-                skinData.eveningRoutine.forEach(step => {
-                    html += `
-                        <div class="routine-step">
-                            <div class="step-header">
-                                <div class="step-number">${step.step}</div>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600; font-size: 1.1em; color: #2c3e50;">${step.product}</div>
-                                    <div style="color: #7f8c8d; font-size: 0.9em;">${step.type} • ${step.timing}</div>
-                                </div>
-                                <span class="priority-badge priority-${step.priority}">${step.priority.toUpperCase()}</span>
-                            </div>
-                            <div style="margin: 10px 0;">
-                                <strong>Purpose:</strong> ${step.purpose}
-                            </div>
-                            <div style="margin: 10px 0;">
-                                <strong>Key Ingredients:</strong>
-                                ${step.ingredients.map(ing => `<span class="ingredient-tag">${ing}</span>`).join('')}
-                            </div>
-                            <div style="margin: 10px 0;">
-                                <strong>Application:</strong> ${step.application}
-                            </div>
-                            ${step.science ? `
-                            <div style="margin: 10px 0; padding: 10px; background: rgba(52, 152, 219, 0.1); border-radius: 8px;">
-                                <strong>🔬 Science:</strong> ${step.science}
-                            </div>
-                            ` : ''}
-                        </div>
-                    `;
-                });
-            }
-            
-            html += `</div>`;
-            routineContainer.innerHTML = html;
-        }
-
-        // LOAD SCIENCE EXPLANATIONS
-        function loadScienceExplanations() {
-            const scienceContainer = document.getElementById('science-explanations');
-            const skinData = productDatabase[currentSkinType] || productDatabase['Normal Skin'];
-            
-            let html = `
-                <h3 style="margin-bottom: 20px; color: #2c3e50;">🔬 The Science Behind Your ${currentSkinType} Routine</h3>
-                <p style="color: #7f8c8d; margin-bottom: 20px;">Understanding why these ingredients and routines work for your specific skin type</p>
-            `;
-
-            if (skinData.scienceExplanations) {
-                skinData.scienceExplanations.forEach(explanation => {
-                    html += `
-                        <div class="science-explanation">
-                            <h4 style="margin: 0 0 15px 0; color: white;">${explanation.title}</h4>
-                            <p style="margin: 0; opacity: 0.9; line-height: 1.6;">${explanation.content}</p>
-                        </div>
-                    `;
-                });
-            }
-
-            // Add ingredient-specific science
-            html += `
-                <div style="margin-top: 30px;">
-                    <h4 style="margin-bottom: 20px; color: #2c3e50;">🧪 Key Ingredient Science for ${currentSkinType}</h4>
-            `;
-
-            if (skinData.keyIngredients) {
-                skinData.keyIngredients.forEach(ingredient => {
-                    const science = getIngredientScience(ingredient);
-                    html += `
-                        <div class="product-card">
-                            <h5 style="color: #2c3e50; margin-bottom: 10px;">${ingredient}</h5>
-                            <p style="color: #7f8c8d; margin: 0; line-height: 1.5;">${science}</p>
-                        </div>
-                    `;
-                });
-            }
-
-            html += `</div>`;
-            scienceContainer.innerHTML = html;
-        }
-
-        function getIngredientScience(ingredient) {
-            const scienceData = {
-                'Salicylic Acid': 'Beta-hydroxy acid that exfoliates inside pores, dissolves sebum plugs, and has anti-inflammatory properties.',
-                'Niacinamide': 'Vitamin B3 derivative that reduces inflammation, regulates sebum production, and improves skin barrier function.',
-                'Ceramides': 'Lipid molecules that constitute 50% of skin barrier. Repairs barrier function and reduces moisture loss.',
-                'Hyaluronic Acid': 'Powerful humectant that holds up to 1000x its weight in water for lasting hydration.',
-                'Benzoyl Peroxide': 'Antimicrobial that kills acne-causing bacteria and reduces inflammation.',
-                'Retinol': 'Vitamin A derivative that promotes cell turnover and collagen production.',
-                'Vitamin C': 'Powerful antioxidant that brightens skin and protects against environmental damage.',
-                'Peptides': 'Amino acid chains that signal skin to produce more collagen for firmness.',
-                'Squalane': 'Bio-identical oil that mimics skin\'s natural sebum for lightweight hydration.',
-                'Centella Asiatica': 'Traditional herb with powerful anti-inflammatory and wound-healing properties.'
-            };
-            return scienceData[ingredient] || 'Scientific research supports this ingredient for improving skin health.';
-        }
-
-        // SKIN DIARY FUNCTIONS
-        function loadSkinDiary() {
-            let html = `
-                <h3 style="margin-bottom: 20px; color: #2c3e50;">📓 Your Skin Journey Diary</h3>
-                <p style="color: #7f8c8d; margin-bottom: 20px;">Track your daily skin condition, products used, and how your skin feels</p>
-                
-                <div class="product-card">
-                    <h4 style="margin-bottom: 15px; color: #2c3e50;">➕ Add New Diary Entry</h4>
-                    <textarea id="diaryEntry" placeholder="How is your skin today? Note any changes, reactions to products, or concerns..."></textarea>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0;">
-                        <input type="text" id="skinCondition" placeholder="Skin condition (e.g., oily, dry, breakout)">
-                        <input type="text" id="productsUsed" placeholder="Products used today">
-                    </div>
-                    <button onclick="addDiaryEntry()" class="btn btn-primary" style="width: 100%;">
-                        <span>💾</span> Save Diary Entry
-                    </button>
-                </div>
-                
-                <div style="margin-top: 30px;">
-                    <h4 style="margin-bottom: 20px; color: #2c3e50;">📅 Diary History</h4>
-            `;
-
-            if (skinDiary.length === 0) {
-                html += `
-                    <div class="diary-entry">
-                        <p style="text-align: center; color: #7f8c8d; margin: 0;">No diary entries yet. Start tracking your skin journey above!</p>
-                    </div>
-                `;
-            } else {
-                skinDiary.slice().reverse().forEach(entry => {
-                    html += `
-                        <div class="diary-entry">
-                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                                <strong style="color: #2c3e50;">${new Date(entry.date).toLocaleDateString()}</strong>
-                                <span style="color: #7f8c8d; font-size: 0.9em;">${entry.condition}</span>
-                            </div>
-                            <p style="margin-bottom: 10px;">${entry.notes}</p>
-                            ${entry.products ? `<div style="color: #6a11cb; font-size: 0.9em;"><strong>Products:</strong> ${entry.products}</div>` : ''}
-                        </div>
-                    `;
-                });
-            }
-
-            html += `</div>`;
-            document.getElementById('skin-diary').innerHTML = html;
-        }
-
-        function addDiaryEntry() {
-            const entryText = document.getElementById('diaryEntry').value;
-            const condition = document.getElementById('skinCondition').value;
-            const products = document.getElementById('productsUsed').value;
-
-            if (!entryText.trim()) {
-                alert('Please write something about your skin today!');
-                return;
-            }
-
-            const newEntry = {
-                date: new Date().toISOString(),
-                notes: entryText,
-                condition: condition || 'Not specified',
-                products: products || 'Not specified'
-            };
-
-            skinDiary.push(newEntry);
-            localStorage.setItem('skinDiary', JSON.stringify(skinDiary));
-
-            document.getElementById('diaryEntry').value = '';
-            document.getElementById('skinCondition').value = '';
-            document.getElementById('productsUsed').value = '';
-
-            loadSkinDiary();
-            alert('Diary entry saved successfully! 📝');
-        }
-
-        // PROGRESS PHOTOS FUNCTIONS
-        function loadProgressPhotos() {
-            let html = `
-                <h3 style="margin-bottom: 20px; color: #2c3e50;">📸 Progress Photo Timeline</h3>
-                <p style="color: #7f8c8d; margin-bottom: 20px;">Track your skin transformation with regular photos</p>
-                
-                <div class="product-card">
-                    <h4 style="margin-bottom: 15px; color: #2c3e50;">➕ Add Progress Photo</h4>
-                    <p style="color: #7f8c8d; margin-bottom: 15px;">Take a photo in consistent lighting to track changes over time</p>
-                    <input type="file" id="photoUpload" accept="image/*" capture="camera" style="margin: 10px 0;">
-                    <input type="text" id="photoNotes" placeholder="Notes about this photo (e.g., 'Week 2 - reduced redness')" style="margin-bottom: 15px;">
-                    <button onclick="addProgressPhoto()" class="btn btn-primary" style="width: 100%;">
-                        <span>📷</span> Add Progress Photo
-                    </button>
-                </div>
-                
-                <div style="margin-top: 30px;">
-                    <h4 style="margin-bottom: 20px; color: #2c3e50;">🕒 Photo Timeline</h4>
-            `;
-
-            if (progressPhotos.length === 0) {
-                html += `
-                    <div class="progress-photo">
-                        <p style="text-align: center; color: #7f8c8d; margin: 0;">No progress photos yet. Start documenting your journey above!</p>
-                    </div>
-                `;
-            } else {
-                progressPhotos.slice().reverse().forEach(photo => {
-                    html += `
-                        <div class="progress-photo">
-                            <div style="text-align: center; margin-bottom: 15px;">
-                                <strong style="color: #2c3e50;">${new Date(photo.date).toLocaleDateString()}</strong>
-                                ${photo.notes ? `<p style="color: #7f8c8d; margin: 5px 0;">${photo.notes}</p>` : ''}
-                            </div>
-                            <img src="${photo.dataUrl}" style="max-width: 100%; max-height: 300px; border-radius: 10px; border: 2px solid #e9ecef;">
-                        </div>
-                    `;
-                });
-            }
-
-            html += `</div>`;
-            document.getElementById('progress-photos').innerHTML = html;
-        }
-
-        function addProgressPhoto() {
-            const fileInput = document.getElementById('photoUpload');
-            const notes = document.getElementById('photoNotes').value;
-
-            if (!fileInput.files[0]) {
-                alert('Please take or select a photo first!');
-                return;
-            }
-
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                const newPhoto = {
-                    date: new Date().toISOString(),
-                    dataUrl: e.target.result,
-                    notes: notes || 'No notes',
-                    source: 'upload'
-                };
-
-                progressPhotos.push(newPhoto);
-                localStorage.setItem('progressPhotos', JSON.stringify(progressPhotos));
-
-                fileInput.value = '';
-                document.getElementById('photoNotes').value = '';
-
-                loadProgressPhotos();
-                alert('Progress photo added successfully! 🌟');
-            };
-
-            reader.readAsDataURL(file);
-        }
-
-        function captureProgressPhoto() {
-            if (!isCameraOn) {
-                alert('Please start the camera first!');
-                return;
-            }
-
-            const video = document.getElementById('webcam-video');
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            const photoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            const notes = prompt('Add notes for this progress photo (optional):');
-            
-            const newPhoto = {
-                date: new Date().toISOString(),
-                dataUrl: photoDataUrl,
-                notes: notes || 'Camera capture - ' + new Date().toLocaleDateString(),
-                source: 'camera'
+            const layout = {
+                title: 'Skin Concerns Analysis',
+                xaxis: { title: 'Concern Areas' },
+                yaxis: { title: 'Priority Level (%)', range: [0, 100] },
+                margin: { t: 50, b: 80, l: 60, r: 40 },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#374151' }
             };
             
-            progressPhotos.push(newPhoto);
-            localStorage.setItem('progressPhotos', JSON.stringify(progressPhotos));
-            switchTab('progress');
-            alert('Progress photo captured successfully! 📸');
+            Plotly.newPlot('concerns-chart', data, layout, {responsive: true});
         }
 
-        // PDF EXPORT
-        function loadExportOptions() {
-            document.getElementById('export-options').innerHTML = `
-                <div class="export-section">
-                    <h3 style="margin-bottom: 15px; color: #2c3e50;">📄 Export SkinCast Report</h3>
-                    <p style="color: #7f8c8d; margin-bottom: 25px;">Create a comprehensive PDF report of your skin analysis and personalized routine</p>
+        function loadProducts() {
+            const productGrid = document.getElementById('product-grid');
+            const products = productDatabase[currentSkinType].products;
+            
+            productGrid.innerHTML = products.map(product => `
+                <div class="product-card glass-morphism rounded-2xl p-6 relative" data-budget="${product.budget}">
+                    <div class="budget-badge ${product.budget === 'affordable' ? 'budget-affordable' : 'budget-premium'}">
+                        ${product.budget === 'affordable' ? 'Budget-Friendly' : 'Premium'}
+                    </div>
                     
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 25px 0;">
-                        <div class="feature-card">
-                            <div class="feature-icon">📋</div>
-                            <h4>Basic Report</h4>
-                            <p>Skin analysis & routine</p>
-                            <button onclick="exportPDF('basic')" class="btn btn-primary" style="margin-top: 10px;">
-                                Export Basic
-                            </button>
+                    <div class="aspect-square mb-4 rounded-xl overflow-hidden">
+                        <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5 class="text-lg font-bold text-white mb-1">${product.name}</h5>
+                        <p class="text-white/70 text-sm mb-2">${product.brand}</p>
+                        <p class="text-white/80 text-sm mb-3">${product.description}</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-2xl font-bold text-white">${product.price}</span>
+                            <div class="flex items-center">
+                                <div class="flex text-yellow-400 mr-2">
+                                    ${'★'.repeat(Math.floor(product.rating))}${'☆'.repeat(5 - Math.floor(product.rating))}
+                                </div>
+                                <span class="text-white/70 text-sm">${product.rating}</span>
+                            </div>
                         </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">📊</div>
-                            <h4>Full Report</h4>
-                            <p>Includes science & products</p>
-                            <button onclick="exportPDF('full')" class="btn btn-secondary" style="margin-top: 10px;">
-                                Export Full
-                            </button>
+                        <p class="text-white/60 text-xs">${product.reviews.toLocaleString()} reviews</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="text-white font-semibold mb-2">Key Ingredients:</h6>
+                        <div class="flex flex-wrap gap-2">
+                            ${product.ingredients.slice(0, 3).map(ingredient => 
+                                `<span class="ingredient-tag px-3 py-1 rounded-full text-xs font-medium">${ingredient}</span>`
+                            ).join('')}
                         </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">🩺</div>
-                            <h4>Professional Report</h4>
-                            <p>Complete analysis</p>
-                            <button onclick="exportPDF('professional')" class="btn btn-warning" style="margin-top: 10px;">
-                                Export Pro
-                            </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="text-white font-semibold mb-2">Usage:</h6>
+                        <p class="text-white/80 text-sm">${product.usage}</p>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        ${product.features.map(feature => 
+                            `<span class="bg-white/10 text-white px-2 py-1 rounded-lg text-xs">${feature}</span>`
+                        ).join('')}
+                    </div>
+                    
+                    <button onclick="addToRoutine('${product.id}')" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white py-3 rounded-xl font-semibold hover:from-purple-600 hover:to-blue-600 transition-all">
+                        <i class="fas fa-plus mr-2"></i>Add to Routine
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function loadRoutines() {
+            const morningRoutine = document.getElementById('morning-routine');
+            const eveningRoutine = document.getElementById('evening-routine');
+            
+            const morningSteps = productDatabase[currentSkinType].morningRoutine;
+            const eveningSteps = productDatabase[currentSkinType].eveningRoutine;
+            
+            morningRoutine.innerHTML = morningSteps.map((step, index) => `
+                <div class="routine-step bg-white/10 p-4 rounded-xl mb-4">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            ${step.step}
+                        </div>
+                        <div class="flex-1">
+                            <h5 class="text-white font-semibold mb-1">${step.product}</h5>
+                            <p class="text-white/80 text-sm mb-2">${step.purpose}</p>
+                            <p class="text-white/60 text-xs mb-2">${step.application}</p>
+                            <span class="bg-white/20 text-white px-2 py-1 rounded-lg text-xs">${step.timing}</span>
                         </div>
                     </div>
                 </div>
-            `;
+            `).join('');
+            
+            eveningRoutine.innerHTML = eveningSteps.map((step, index) => `
+                <div class="routine-step bg-white/10 p-4 rounded-xl mb-4">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            ${step.step}
+                        </div>
+                        <div class="flex-1">
+                            <h5 class="text-white font-semibold mb-1">${step.product}</h5>
+                            <p class="text-white/80 text-sm mb-2">${step.purpose}</p>
+                            <p class="text-white/60 text-xs mb-2">${step.application}</p>
+                            <span class="bg-white/20 text-white px-2 py-1 rounded-lg text-xs">${step.timing}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        async function exportPDF(type) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+        function loadScienceContent() {
+            const scienceContent = document.getElementById('science-content');
+            const explanations = productDatabase[currentSkinType].scienceExplanations;
             
-            doc.setFillColor(106, 17, 203);
-            doc.rect(0, 0, 210, 30, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(20);
-            doc.text('SkinCast AI Skin Report', 105, 15, { align: 'center' });
-            
-            doc.setTextColor(44, 62, 80);
-            doc.setFontSize(16);
-            doc.text(`Skin Type: ${currentSkinType}`, 20, 50);
-            
-            doc.setFontSize(10);
-            doc.setTextColor(150, 150, 150);
-            doc.text('Generated by SkinCast - Complete AI Skin Analysis', 105, 290, { align: 'center' });
-            
-            doc.save(`SkinCast_Report_${currentSkinType.replace(' ', '_')}.pdf`);
-            alert('📄 SkinCast PDF report generated successfully!');
+            scienceContent.innerHTML = explanations.map((explanation, index) => `
+                <div class="bg-white/10 p-6 rounded-xl mb-4">
+                    <h5 class="text-white font-bold text-lg mb-3">
+                        <i class="fas fa-flask mr-2 text-purple-400"></i>${explanation.title}
+                    </h5>
+                    <p class="text-white/80 leading-relaxed">${explanation.content}</p>
+                </div>
+            `).join('');
         }
 
-        // TAB SWITCHING
         function switchTab(tabName) {
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
             
-            event.currentTarget.classList.add('active');
-            document.getElementById(tabName + '-tab').classList.add('active');
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
         }
 
-        // DEMO FUNCTION
-        function showDemoResults() {
-            const skinTypes = Object.keys(productDatabase);
-            const randomSkinType = skinTypes[Math.floor(Math.random() * skinTypes.length)];
-            displayRealResults(randomSkinType, 0.92);
+        function filterProducts(budget) {
+            const products = document.querySelectorAll('.product-card');
+            const buttons = document.querySelectorAll('.filter-btn');
+            
+            // Update button states
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Filter products
+            products.forEach(product => {
+                if (budget === 'all') {
+                    product.style.display = 'block';
+                } else {
+                    const productBudget = product.dataset.budget;
+                    if (productBudget === budget) {
+                        product.style.display = 'block';
+                    } else {
+                        product.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function addToRoutine(productId) {
+            showNotification('Product added to your routine!', 'success');
         }
 
         function startNewAnalysis() {
+            // Reset everything
             document.getElementById('results-section').classList.add('hidden');
             stopCamera();
+            
+            // Reset prediction display
+            document.getElementById('prediction-display').innerHTML = `
+                <p class="text-white/80 text-center">Start camera to see real-time analysis</p>
+            `;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function shareApp() {
-            const shareUrl = window.location.href;
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(shareUrl).then(() => {
-                    alert('📋 Link copied to clipboard! Share your personalized skincare routine with friends.');
+        function shareResults() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My SkinCast AI Analysis Results',
+                    text: `I just got my personalized skincare analysis from SkinCast AI! My skin type is ${currentSkinType}.`,
+                    url: window.location.href
                 });
             } else {
-                alert('Share this link: ' + shareUrl);
+                // Fallback for browsers that don't support Web Share API
+                const text = `I just got my personalized skincare analysis from SkinCast AI! My skin type is ${currentSkinType}. Check it out: ${window.location.href}`;
+                navigator.clipboard.writeText(text).then(() => {
+                    showNotification('Results copied to clipboard!', 'success');
+                });
             }
         }
 
-        // Initialize the app
-        window.onload = init;
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            document.getElementById('loading-overlay').classList.add('flex');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+            document.getElementById('loading-overlay').classList.remove('flex');
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-xl text-white max-w-sm ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+            }`;
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle' : 
+                        type === 'error' ? 'fa-exclamation-circle' : 
+                        type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'
+                    } mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Add some utility functions for enhanced UX
+        function createProgressChart() {
+            const data = [{
+                x: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                y: [65, 72, 78, 85],
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#667eea', width: 3 },
+                marker: { color: '#667eea', size: 8 }
+            }];
+            
+            const layout = {
+                title: 'Skin Health Progress',
+                xaxis: { title: 'Time' },
+                yaxis: { title: 'Skin Health Score', range: [0, 100] },
+                margin: { t: 50, b: 50, l: 60, r: 40 },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: 'white' }
+            };
+            
+            Plotly.newPlot('progress-chart', data, layout, {responsive: true});
+        }
+
+        // Initialize progress chart when progress tab is clicked
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'tab-progress') {
+                setTimeout(createProgressChart, 100);
+            }
+        });
     </script>
 </body>
 </html>
