@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkinCast - Complete AI Skin Analysis</title>
+    <title>SkinCast AI – Precision Skin Analysis</title>
+
+    <!-- External libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/3.0.3/plotly.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -15,39 +18,32 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
-        
         .glass-morphism {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
         .gradient-text {
             background: linear-gradient(135deg, #667eea, #764ba2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        
         .floating-animation {
             animation: float 6s ease-in-out infinite;
         }
-        
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
         }
-        
         .product-card {
             transition: all 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
         .product-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
-        
         .budget-badge {
             position: absolute;
             top: 10px;
@@ -58,32 +54,26 @@
             font-weight: 600;
             z-index: 10;
         }
-        
         .budget-affordable {
             background: #10b981;
             color: white;
         }
-        
         .budget-premium {
             background: #f59e0b;
             color: white;
         }
-        
         .routine-step {
             border-left: 4px solid #667eea;
             transition: all 0.3s ease;
         }
-        
         .routine-step:hover {
             border-left-color: #764ba2;
             transform: translateX(5px);
         }
-        
         .tab-button {
             transition: all 0.3s ease;
             position: relative;
         }
-        
         .tab-button.active::after {
             content: '';
             position: absolute;
@@ -94,35 +84,29 @@
             background: #667eea;
             border-radius: 2px;
         }
-        
         .loading-spinner {
             animation: spin 1s linear infinite;
         }
-        
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-        
         .skin-analysis-chart {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
             padding: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
-        
         .ingredient-tag {
             background: rgba(102, 126, 234, 0.1);
             color: #667eea;
             border: 1px solid rgba(102, 126, 234, 0.3);
         }
-        
         .concern-indicator {
             height: 8px;
             border-radius: 4px;
             transition: width 0.8s ease;
         }
-        
         .camera-overlay {
             position: absolute;
             top: 0;
@@ -133,12 +117,50 @@
             border-radius: 15px;
             pointer-events: none;
         }
-        
         .ai-prediction-box {
             border: 2px solid #667eea;
             border-radius: 10px;
             background: rgba(102, 126, 234, 0.1);
         }
+
+        /* Face scan animation */
+        .scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #667eea;
+            box-shadow: 0 0 10px #667eea;
+            animation: scanMove 2.5s linear infinite;
+            border-radius: 2px;
+        }
+        @keyframes scanMove {
+            0%   { top: 0%; }
+            100% { top: 100%; }
+        }
+        .face-outline {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 260px;
+            height: 360px;
+            border: 2px solid rgba(255,255,255,0.7);
+            border-radius: 130px 130px 180px 180px / 160px 160px 200px 200px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .face-outline::before,
+        .face-outline::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.7);
+            border-radius: 50%;
+            top: 120px;
+        }
+        .face-outline::before { left: 60px; }
+        .face-outline::after  { right: 60px; }
     </style>
 </head>
 <body>
@@ -181,15 +203,22 @@
             </h3>
             
             <div class="grid md:grid-cols-2 gap-8 items-center">
-                <div class="relative">
-                    <div id="camera-placeholder" class="bg-white/10 rounded-2xl p-8 text-center border-2 border-dashed border-white/30">
+                <div class="relative overflow-hidden rounded-2xl bg-black/20" id="camera-container">
+                    <!-- Placeholder -->
+                    <div id="camera-placeholder" class="p-8 text-center border-2 border-dashed border-white/30">
                         <div class="text-6xl text-white/60 mb-4">📷</div>
                         <p class="text-white/80 text-lg">Camera ready for analysis</p>
                         <p class="text-white/60 text-sm mt-2">Click "Start Camera" to begin</p>
                     </div>
+                    <!-- Live video -->
                     <video id="webcam-video" class="hidden w-full rounded-2xl" autoplay playsinline></video>
                     <canvas id="webcam-canvas" class="hidden"></canvas>
-                    <div id="camera-overlay" class="camera-overlay hidden"></div>
+                    
+                    <!-- Scan animation -->
+                    <div id="scan-animation" class="hidden">
+                        <div class="face-outline"></div>
+                        <div class="scan-line"></div>
+                    </div>
                 </div>
                 
                 <div class="space-y-4">
@@ -345,11 +374,10 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script>
-        // Global variables
+        /* =========================================================
+           GLOBAL STATE
+        ========================================================== */
         let model = null;
         let isCameraOn = false;
         let currentStream = null;
@@ -357,82 +385,27 @@
         let currentSkinType = '';
         let skinAnalysis = {};
 
-        // Enhanced Product Database with Budget and Premium Options
+        /* =========================================================
+           ENHANCED PRODUCT DATABASE
+        ========================================================== */
         const productDatabase = {
             'Acne-Prone Skin': {
                 description: 'Products to control oil, reduce inflammation, and prevent breakouts',
                 concerns: ['Breakouts', 'Excess Oil', 'Inflammation', 'Clogged Pores'],
                 keyIngredients: ['Salicylic Acid', 'Niacinamide', 'Benzoyl Peroxide', 'Retinol'],
                 morningRoutine: [
-                    {
-                        step: 1,
-                        product: 'Gentle Cleanser',
-                        type: 'Cleanser',
-                        purpose: 'Remove overnight oil without stripping',
-                        application: 'Massage for 30 seconds, rinse with cool water',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 2,
-                        product: 'Niacinamide Serum',
-                        type: 'Treatment',
-                        purpose: 'Control oil production',
-                        application: '3-4 drops on oily areas',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 3,
-                        product: 'Lightweight Moisturizer',
-                        type: 'Moisturizer',
-                        purpose: 'Hydrate without clogging pores',
-                        application: 'Pea-sized amount, avoid heavy application',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 4,
-                        product: 'Oil-Free Sunscreen',
-                        type: 'Sun Protection',
-                        purpose: 'Protect from UV damage',
-                        application: 'Apply 15 minutes before sun exposure',
-                        timing: 'Daily'
-                    }
+                    { step: 1, product: 'Gentle Cleanser', type: 'Cleanser', purpose: 'Remove overnight oil without stripping', application: 'Massage for 30 seconds, rinse with cool water', timing: 'Daily' },
+                    { step: 2, product: 'Niacinamide Serum', type: 'Treatment', purpose: 'Control oil production', application: '3-4 drops on oily areas', timing: 'Daily' },
+                    { step: 3, product: 'Lightweight Moisturizer', type: 'Moisturizer', purpose: 'Hydrate without clogging pores', application: 'Pea-sized amount, avoid heavy application', timing: 'Daily' },
+                    { step: 4, product: 'Oil-Free Sunscreen', type: 'Sun Protection', purpose: 'Protect from UV damage', application: 'Apply 15 minutes before sun exposure', timing: 'Daily' }
                 ],
                 eveningRoutine: [
-                    {
-                        step: 1,
-                        product: 'Cleanser',
-                        type: 'Cleanser',
-                        purpose: 'Remove makeup and daily buildup',
-                        application: 'Double cleanse if wearing makeup',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 2,
-                        product: 'Exfoliating Treatment',
-                        type: 'Treatment',
-                        purpose: 'Unclog pores and prevent breakouts',
-                        application: 'Focus on problem areas, avoid eye area',
-                        timing: '3-4 times weekly'
-                    },
-                    {
-                        step: 3,
-                        product: 'Treatment Serum',
-                        type: 'Treatment',
-                        purpose: 'Target active breakouts',
-                        application: 'Spot treatment or all over face',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 4,
-                        product: 'Light Moisturizer',
-                        type: 'Moisturizer',
-                        purpose: 'Maintain skin barrier',
-                        application: 'Allow treatments to absorb first',
-                        timing: 'Daily'
-                    }
+                    { step: 1, product: 'Cleanser', type: 'Cleanser', purpose: 'Remove makeup and daily buildup', application: 'Double cleanse if wearing makeup', timing: 'Daily' },
+                    { step: 2, product: 'Exfoliating Treatment', type: 'Treatment', purpose: 'Unclog pores and prevent breakouts', application: 'Focus on problem areas, avoid eye area', timing: '3-4 times weekly' },
+                    { step: 3, product: 'Treatment Serum', type: 'Treatment', purpose: 'Target active breakouts', application: 'Spot treatment or all over face', timing: 'Daily' },
+                    { step: 4, product: 'Light Moisturizer', type: 'Moisturizer', purpose: 'Maintain skin barrier', application: 'Allow treatments to absorb first', timing: 'Daily' }
                 ],
                 products: [
-                    // Budget-Friendly Options
                     {
                         id: 'acne-budget-1',
                         name: 'CeraVe Acne Foaming Cream Cleanser',
@@ -464,38 +437,7 @@
                         usage: 'Use after cleansing, before moisturizer'
                     },
                     {
-                        id: 'acne-budget-3',
-                        name: 'Neutrogena Oil-Free Moisture Gel',
-                        brand: 'Neutrogena',
-                        price: '$12.99',
-                        budget: 'affordable',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                        rating: 4.3,
-                        reviews: 8900,
-                        description: 'Lightweight gel moisturizer for oily skin',
-                        ingredients: ['Glycerin', 'Dimethicone', 'Hyaluronic Acid'],
-                        features: ['Oil-Free', 'Non-Comedogenic', 'Lightweight'],
-                        skinConcerns: ['Hydration', 'Oil Control'],
-                        usage: 'Use morning and evening'
-                    },
-                    // Premium Options
-                    {
                         id: 'acne-premium-1',
-                        name: 'La Roche-Posay Effaclar Duo Dual Action Acne Treatment',
-                        brand: 'La Roche-Posay',
-                        price: '$34.99',
-                        budget: 'premium',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                        rating: 4.5,
-                        reviews: 8900,
-                        description: '5.5% micronized benzoyl peroxide treatment',
-                        ingredients: ['Benzoyl Peroxide 5.5%', 'Lipohydroxy Acid', 'Niacinamide'],
-                        features: ['Oil-Free', 'Fragrance-Free', 'Dermatologist Tested'],
-                        skinConcerns: ['Acne', 'Blackheads', 'Whiteheads'],
-                        usage: 'Use as spot treatment or all over face'
-                    },
-                    {
-                        id: 'acne-premium-2',
                         name: 'Paula\'s Choice 2% BHA Liquid Exfoliant',
                         brand: 'Paula\'s Choice',
                         price: '$32.00',
@@ -510,7 +452,7 @@
                         usage: 'Use 2-3 times weekly after cleansing'
                     },
                     {
-                        id: 'acne-premium-3',
+                        id: 'acne-premium-2',
                         name: 'SkinCeuticals Blemish + Age Defense',
                         brand: 'SkinCeuticals',
                         price: '$92.00',
@@ -526,18 +468,8 @@
                     }
                 ],
                 scienceExplanations: [
-                    {
-                        title: "Salicylic Acid: The Pore-Clearing Powerhouse",
-                        content: "Salicylic Acid is a beta-hydroxy acid (BHA) that's oil-soluble, allowing it to penetrate deep into pores. It works by dissolving the 'glue' that holds dead skin cells together, preventing clogged pores and reducing existing blackheads and whiteheads."
-                    },
-                    {
-                        title: "Niacinamide: The Multi-Tasking Marvel",
-                        content: "Niacinamide (Vitamin B3) regulates sebum production, reduces inflammation, and strengthens the skin barrier. Studies show it can reduce acne lesions by up to 60% when used consistently."
-                    },
-                    {
-                        title: "Benzoyl Peroxide: Bacteria Fighter",
-                        content: "Benzoyl Peroxide kills acne-causing bacteria (P. acnes) by releasing oxygen into the pore. It's particularly effective for inflammatory acne and can reduce lesions by 50-70% with regular use."
-                    }
+                    { title: "Salicylic Acid: The Pore-Clearing Powerhouse", content: "Salicylic Acid is a beta-hydroxy acid (BHA) that's oil-soluble, allowing it to penetrate deep into pores. It works by dissolving the 'glue' that holds dead skin cells together, preventing clogged pores and reducing existing blackheads and whiteheads." },
+                    { title: "Niacinamide: The Multi-Tasking Marvel", content: "Niacinamide (Vitamin B3) regulates sebum production, reduces inflammation, and strengthens the skin barrier. Studies show it can reduce acne lesions by up to 60% when used consistently." }
                 ]
             },
             'Dry Skin': {
@@ -545,91 +477,20 @@
                 concerns: ['Dehydration', 'Flakiness', 'Tightness', 'Barrier Damage'],
                 keyIngredients: ['Hyaluronic Acid', 'Ceramides', 'Squalane', 'Peptides'],
                 morningRoutine: [
-                    {
-                        step: 1,
-                        product: 'Gentle Cream Cleanser',
-                        type: 'Cleanser',
-                        purpose: 'Cleanse without stripping natural oils',
-                        application: 'Massage gently, rinse with lukewarm water',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 2,
-                        product: 'Hydrating Toner/Essence',
-                        type: 'Hydrator',
-                        purpose: 'Prepare skin for better product absorption',
-                        application: 'Pat into damp skin',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 3,
-                        product: 'Hydrating Serum',
-                        type: 'Treatment',
-                        purpose: 'Deep hydration and moisture retention',
-                        application: 'Apply to damp skin, press gently',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 4,
-                        product: 'Rich Moisturizer',
-                        type: 'Moisturizer',
-                        purpose: 'Seal in hydration and repair barrier',
-                        application: 'Allow serums to absorb first',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 5,
-                        product: 'Facial Oil (Optional)',
-                        type: 'Occlusive',
-                        purpose: 'Extra protection and nourishment',
-                        application: '2-3 drops pressed into skin',
-                        timing: 'As needed'
-                    }
+                    { step: 1, product: 'Gentle Cream Cleanser', type: 'Cleanser', purpose: 'Cleanse without stripping natural oils', application: 'Massage gently, rinse with lukewarm water', timing: 'Daily' },
+                    { step: 2, product: 'Hydrating Toner/Essence', type: 'Hydrator', purpose: 'Prepare skin for better product absorption', application: 'Pat into damp skin', timing: 'Daily' },
+                    { step: 3, product: 'Hydrating Serum', type: 'Treatment', purpose: 'Deep hydration and moisture retention', application: 'Apply to damp skin, press gently', timing: 'Daily' },
+                    { step: 4, product: 'Rich Moisturizer', type: 'Moisturizer', purpose: 'Seal in hydration and repair barrier', application: 'Allow serums to absorb first', timing: 'Daily' },
+                    { step: 5, product: 'Facial Oil (Optional)', type: 'Occlusive', purpose: 'Extra protection and nourishment', application: '2-3 drops pressed into skin', timing: 'As needed' }
                 ],
                 eveningRoutine: [
-                    {
-                        step: 1,
-                        product: 'Cleansing Balm/Oil',
-                        type: 'Cleanser',
-                        purpose: 'Remove makeup and sunscreen',
-                        application: 'Massage onto dry skin, emulsify with water',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 2,
-                        product: 'Gentle Cleanser',
-                        type: 'Cleanser',
-                        purpose: 'Second cleanse to remove residue',
-                        application: 'Focus on massaging, not scrubbing',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 3,
-                        product: 'Treatment Serum',
-                        type: 'Treatment',
-                        purpose: 'Address specific concerns (aging, texture)',
-                        application: 'Wait 20 minutes after acids',
-                        timing: '3-4 times weekly'
-                    },
-                    {
-                        step: 4,
-                        product: 'Hydrating Serum',
-                        type: 'Treatment',
-                        purpose: 'Replenish moisture',
-                        application: 'Layer if using multiple serums',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 5,
-                        product: 'Night Cream',
-                        type: 'Moisturizer',
-                        purpose: 'Intensive overnight hydration',
-                        application: 'Generous amount, massage thoroughly',
-                        timing: 'Daily'
-                    }
+                    { step: 1, product: 'Cleansing Balm/Oil', type: 'Cleanser', purpose: 'Remove makeup and sunscreen', application: 'Massage onto dry skin, emulsify with water', timing: 'Daily' },
+                    { step: 2, product: 'Gentle Cleanser', type: 'Cleanser', purpose: 'Second cleanse to remove residue', application: 'Focus on massaging, not scrubbing', timing: 'Daily' },
+                    { step: 3, product: 'Treatment Serum', type: 'Treatment', purpose: 'Address specific concerns (aging, texture)', application: 'Wait 20 minutes after acids', timing: '3-4 times weekly' },
+                    { step: 4, product: 'Hydrating Serum', type: 'Treatment', purpose: 'Replenish moisture', application: 'Layer if using multiple serums', timing: 'Daily' },
+                    { step: 5, product: 'Night Cream', type: 'Moisturizer', purpose: 'Intensive overnight hydration', application: 'Generous amount, massage thoroughly', timing: 'Daily' }
                 ],
                 products: [
-                    // Budget-Friendly Options
                     {
                         id: 'dry-budget-1',
                         name: 'CeraVe Hydrating Facial Cleanser',
@@ -661,22 +522,6 @@
                         usage: 'Apply to damp skin morning and evening'
                     },
                     {
-                        id: 'dry-budget-3',
-                        name: 'Neutrogena Hydro Boost Water Gel',
-                        brand: 'Neutrogena',
-                        price: '$19.99',
-                        budget: 'affordable',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                        rating: 4.4,
-                        reviews: 32500,
-                        description: '48-hour hydration with hyaluronic acid',
-                        ingredients: ['Hyaluronic Acid', 'Glycerin', 'Dimethicone'],
-                        features: ['Oil-Free', 'Non-Comedogenic', 'Dermatologist Tested'],
-                        skinConcerns: ['Dehydration', 'Fine Lines', 'Dullness'],
-                        usage: 'Use morning and evening after serums'
-                    },
-                    // Premium Options
-                    {
                         id: 'dry-premium-1',
                         name: 'SkinCeuticals Hydrating B5 Gel',
                         brand: 'SkinCeuticals',
@@ -705,36 +550,11 @@
                         features: ['Cruelty-Free', 'Fragrance-Free', 'Silicone-Free'],
                         skinConcerns: ['Dryness', 'Barrier Repair', 'Anti-Aging'],
                         usage: 'Use as final step morning and evening'
-                    },
-                    {
-                        id: 'dry-premium-3',
-                        name: 'Augustinus Bader The Rich Cream',
-                        brand: 'Augustinus Bader',
-                        price: '$290.00',
-                        budget: 'premium',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                        rating: 4.8,
-                        reviews: 1200,
-                        description: 'Luxury moisturizer with TFC8 complex',
-                        ingredients: ['TFC8 Complex', 'Hyaluronic Acid', 'Ceramides', 'Vitamins'],
-                        features: ['Clinical Results', 'Fragrance-Free', 'Patented Technology'],
-                        skinConcerns: ['Aging', 'Dryness', 'Fine Lines', 'Elasticity'],
-                        usage: 'Use sparingly morning and evening'
                     }
                 ],
                 scienceExplanations: [
-                    {
-                        title: "Hyaluronic Acid: The Moisture Magnet",
-                        content: "Hyaluronic Acid can hold up to 1000 times its weight in water, making it a powerful humectant. It draws moisture from the environment into the skin, providing immediate plumping and long-term hydration benefits."
-                    },
-                    {
-                        title: "Ceramides: The Skin Barrier Builders",
-                        content: "Ceramides are lipids that make up 50% of the skin's barrier. They act like mortar between skin cells, preventing moisture loss and protecting against environmental damage. Dry skin often lacks sufficient ceramides."
-                    },
-                    {
-                        title: "The Importance of Layering Hydration",
-                        content: "Effective dry skin care involves layering products from thinnest to thickest. Start with humectants (hyaluronic acid), add emollients (ceramides), and finish with occlusives (oils) to seal everything in."
-                    }
+                    { title: "Hyaluronic Acid: The Moisture Magnet", content: "Hyaluronic Acid can hold up to 1000 times its weight in water, making it a powerful humectant. It draws moisture from the environment into the skin, providing immediate plumping and long-term hydration benefits." },
+                    { title: "Ceramides: The Skin Barrier Builders", content: "Ceramides are lipids that make up 50% of the skin's barrier. They act like mortar between skin cells, preventing moisture loss and protecting against environmental damage. Dry skin often lacks sufficient ceramides." }
                 ]
             },
             'Combination Skin': {
@@ -742,91 +562,20 @@
                 concerns: ['Oily T-zone', 'Dry Cheeks', 'Enlarged Pores', 'Uneven Texture'],
                 keyIngredients: ['Niacinamide', 'Hyaluronic Acid', 'Salicylic Acid', 'Ceramides'],
                 morningRoutine: [
-                    {
-                        step: 1,
-                        product: 'Gentle Gel Cleanser',
-                        type: 'Cleanser',
-                        purpose: 'Balance cleansing without over-drying',
-                        application: 'Focus on T-zone, gentle on cheeks',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 2,
-                        product: 'Balancing Toner',
-                        type: 'Toner',
-                        purpose: 'Prepare skin and balance pH',
-                        application: 'Apply with hands, pat gently',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 3,
-                        product: 'Niacinamide Serum',
-                        type: 'Treatment',
-                        purpose: 'Regulate oil production',
-                        application: 'Focus on oily areas, light layer on dry areas',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 4,
-                        product: 'Lightweight Moisturizer',
-                        type: 'Moisturizer',
-                        purpose: 'Hydrate without heaviness',
-                        application: 'Adjust amount based on facial zones',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 5,
-                        product: 'Mattifying Sunscreen',
-                        type: 'Sun Protection',
-                        purpose: 'Control shine and protect',
-                        application: 'Focus on T-zone for mattifying effect',
-                        timing: 'Daily'
-                    }
+                    { step: 1, product: 'Gentle Gel Cleanser', type: 'Cleanser', purpose: 'Balance cleansing without over-drying', application: 'Focus on T-zone, gentle on cheeks', timing: 'Daily' },
+                    { step: 2, product: 'Balancing Toner', type: 'Toner', purpose: 'Prepare skin and balance pH', application: 'Apply with hands, pat gently', timing: 'Daily' },
+                    { step: 3, product: 'Niacinamide Serum', type: 'Treatment', purpose: 'Regulate oil production', application: 'Focus on oily areas, light layer on dry areas', timing: 'Daily' },
+                    { step: 4, product: 'Lightweight Moisturizer', type: 'Moisturizer', purpose: 'Hydrate without heaviness', application: 'Adjust amount based on facial zones', timing: 'Daily' },
+                    { step: 5, product: 'Mattifying Sunscreen', type: 'Sun Protection', purpose: 'Control shine and protect', application: 'Focus on T-zone for mattifying effect', timing: 'Daily' }
                 ],
                 eveningRoutine: [
-                    {
-                        step: 1,
-                        product: 'Cleansing Oil/Gel',
-                        type: 'Cleanser',
-                        purpose: 'Remove makeup and sunscreen',
-                        application: 'Massage thoroughly, especially on oily areas',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 2,
-                        product: 'Gentle Cleanser',
-                        type: 'Cleanser',
-                        purpose: 'Second cleanse for thorough cleaning',
-                        application: 'Gentle massage, avoid over-cleansing dry areas',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 3,
-                        product: 'BHA Treatment',
-                        type: 'Exfoliant',
-                        purpose: 'Unclog pores in oily areas',
-                        application: 'Apply only to T-zone if cheeks are sensitive',
-                        timing: '3-4 times weekly'
-                    },
-                    {
-                        step: 4,
-                        product: 'Hydrating Serum',
-                        type: 'Treatment',
-                        purpose: 'Address dry cheek areas',
-                        application: 'Focus on dry areas, light layer elsewhere',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 5,
-                        product: 'Balancing Moisturizer',
-                        type: 'Moisturizer',
-                        purpose: 'Hydrate without clogging',
-                        application: 'More on dry areas, less on oily areas',
-                        timing: 'Daily'
-                    }
+                    { step: 1, product: 'Cleansing Oil/Gel', type: 'Cleanser', purpose: 'Remove makeup and sunscreen', application: 'Massage thoroughly, especially on oily areas', timing: 'Daily' },
+                    { step: 2, product: 'Gentle Cleanser', type: 'Cleanser', purpose: 'Second cleanse for thorough cleaning', application: 'Gentle massage, avoid over-cleansing dry areas', timing: 'Daily' },
+                    { step: 3, product: 'BHA Treatment', type: 'Exfoliant', purpose: 'Unclog pores in oily areas', application: 'Apply only to T-zone if cheeks are sensitive', timing: '3-4 times weekly' },
+                    { step: 4, product: 'Hydrating Serum', type: 'Treatment', purpose: 'Address dry cheek areas', application: 'Focus on dry areas, light layer elsewhere', timing: 'Daily' },
+                    { step: 5, product: 'Balancing Moisturizer', type: 'Moisturizer', purpose: 'Hydrate without clogging', application: 'More on dry areas, less on oily areas', timing: 'Daily' }
                 ],
                 products: [
-                    // Budget-Friendly Options
                     {
                         id: 'combo-budget-1',
                         name: 'Cetaphil Daily Facial Cleanser',
@@ -858,22 +607,6 @@
                         usage: 'Use after cleansing, focus on T-zone'
                     },
                     {
-                        id: 'combo-budget-3',
-                        name: 'Neutrogena Hydro Boost Water Gel',
-                        brand: 'Neutrogena',
-                        price: '$19.99',
-                        budget: 'affordable',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                        rating: 4.4,
-                        reviews: 32500,
-                        description: 'Lightweight gel moisturizer for combination skin',
-                        ingredients: ['Hyaluronic Acid', 'Glycerin', 'Dimethicone'],
-                        features: ['Oil-Free', 'Non-Comedogenic', 'Lightweight'],
-                        skinConcerns: ['Hydration', 'Oil Control', 'Lightweight Moisture'],
-                        usage: 'Use sparingly on T-zone, more on dry areas'
-                    },
-                    // Premium Options
-                    {
                         id: 'combo-premium-1',
                         name: 'Youth to the People Superfood Cleanser',
                         brand: 'Youth to the People',
@@ -890,21 +623,6 @@
                     },
                     {
                         id: 'combo-premium-2',
-                        name: 'Paula\'s Choice 2% BHA Liquid Exfoliant',
-                        brand: 'Paula\'s Choice',
-                        price: '$32.00',
-                        budget: 'premium',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                        rating: 4.7,
-                        reviews: 15600,
-                        description: 'Gentle exfoliant for pore clearing',
-                        ingredients: ['Salicylic Acid 2%', 'Green Tea Extract', 'Methylpropanediol'],
-                        features: ['Fragrance-Free', 'Cruelty-Free', 'Dermatologist Recommended'],
-                        skinConcerns: ['Enlarged Pores', 'Blackheads', 'Uneven Texture'],
-                        usage: 'Use 3-4 times weekly on T-zone'
-                    },
-                    {
-                        id: 'combo-premium-3',
                         name: 'Tatcha The Water Cream',
                         brand: 'Tatcha',
                         price: '$68.00',
@@ -920,18 +638,8 @@
                     }
                 ],
                 scienceExplanations: [
-                    {
-                        title: "Zone-Based Skincare Science",
-                        content: "Combination skin requires different approaches for different facial zones. The T-zone has more sebaceous glands per square inch than other facial areas, requiring oil control, while cheeks need hydration support."
-                    },
-                    {
-                        title: "Niacinamide: The Balancing Act",
-                        content: "Niacinamide helps regulate sebum production in oily areas while strengthening the skin barrier in dry areas. It's particularly effective for combination skin as it addresses multiple concerns simultaneously."
-                    },
-                    {
-                        title: "Strategic Product Application",
-                        content: "With combination skin, it's often beneficial to apply different amounts of products to different areas. Use less moisturizer on the T-zone and more on dry cheeks for optimal balance."
-                    }
+                    { title: "Zone-Based Skincare Science", content: "Combination skin requires different approaches for different facial zones. The T-zone has more sebaceous glands per square inch than other facial areas, requiring oil control, while cheeks need hydration support." },
+                    { title: "Niacinamide: The Balancing Act", content: "Niacinamide helps regulate sebum production in oily areas while strengthening the skin barrier in dry areas. It's particularly effective for combination skin as it addresses multiple concerns simultaneously." }
                 ]
             },
             'Normal Skin': {
@@ -939,75 +647,18 @@
                 concerns: ['Maintenance', 'Prevention', 'Environmental Protection', 'Healthy Glow'],
                 keyIngredients: ['Vitamin C', 'Peptides', 'Antioxidants', 'Hyaluronic Acid'],
                 morningRoutine: [
-                    {
-                        step: 1,
-                        product: 'Gentle Cleanser',
-                        type: 'Cleanser',
-                        purpose: 'Refresh skin and remove overnight impurities',
-                        application: 'Gentle circular motions, rinse with lukewarm water',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 2,
-                        product: 'Vitamin C Serum',
-                        type: 'Antioxidant',
-                        purpose: 'Protect against environmental damage',
-                        application: 'Apply to clean, dry skin',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 3,
-                        product: 'Light Moisturizer',
-                        type: 'Moisturizer',
-                        purpose: 'Maintain hydration balance',
-                        application: 'Pea-sized amount, massage gently',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 4,
-                        product: 'Broad Spectrum Sunscreen',
-                        type: 'Sun Protection',
-                        purpose: 'Prevent premature aging and damage',
-                        application: 'Apply 15 minutes before sun exposure',
-                        timing: 'Daily'
-                    }
+                    { step: 1, product: 'Gentle Cleanser', type: 'Cleanser', purpose: 'Refresh skin and remove overnight impurities', application: 'Gentle circular motions, rinse with lukewarm water', timing: 'Daily' },
+                    { step: 2, product: 'Vitamin C Serum', type: 'Antioxidant', purpose: 'Protect against environmental damage', application: 'Apply to clean, dry skin', timing: 'Daily' },
+                    { step: 3, product: 'Light Moisturizer', type: 'Moisturizer', purpose: 'Maintain hydration balance', application: 'Pea-sized amount, massage gently', timing: 'Daily' },
+                    { step: 4, product: 'Broad Spectrum Sunscreen', type: 'Sun Protection', purpose: 'Prevent premature aging and damage', application: 'Apply 15 minutes before sun exposure', timing: 'Daily' }
                 ],
                 eveningRoutine: [
-                    {
-                        step: 1,
-                        product: 'Cleansing Balm/Gel',
-                        type: 'Cleanser',
-                        purpose: 'Remove makeup, sunscreen, and daily buildup',
-                        application: 'Massage thoroughly, especially on sunscreen areas',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 2,
-                        product: 'Treatment Serum',
-                        type: 'Treatment',
-                        purpose: 'Address specific concerns (anti-aging, texture)',
-                        application: 'Allow to absorb completely',
-                        timing: '3-4 times weekly'
-                    },
-                    {
-                        step: 3,
-                        product: 'Hydrating Serum',
-                        type: 'Hydration',
-                        purpose: 'Maintain optimal moisture levels',
-                        application: 'Apply while skin is still slightly damp',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 4,
-                        product: 'Night Moisturizer',
-                        type: 'Moisturizer',
-                        purpose: 'Support overnight skin repair',
-                        application: 'Generous amount, allow to absorb',
-                        timing: 'Daily'
-                    }
+                    { step: 1, product: 'Cleansing Balm/Gel', type: 'Cleanser', purpose: 'Remove makeup, sunscreen, and daily buildup', application: 'Massage thoroughly, especially on sunscreen areas', timing: 'Daily' },
+                    { step: 2, product: 'Treatment Serum', type: 'Treatment', purpose: 'Address specific concerns (anti-aging, texture)', application: 'Allow to absorb completely', timing: '3-4 times weekly' },
+                    { step: 3, product: 'Hydrating Serum', type: 'Hydration', purpose: 'Maintain optimal moisture levels', application: 'Apply while skin is still slightly damp', timing: 'Daily' },
+                    { step: 4, product: 'Night Moisturizer', type: 'Moisturizer', purpose: 'Support overnight skin repair', application: 'Generous amount, allow to absorb', timing: 'Daily' }
                 ],
                 products: [
-                    // Budget-Friendly Options
                     {
                         id: 'normal-budget-1',
                         name: 'Vanicream Gentle Facial Cleanser',
@@ -1039,22 +690,6 @@
                         usage: 'Use in morning, can be mixed with moisturizer'
                     },
                     {
-                        id: 'normal-budget-3',
-                        name: 'CeraVe Daily Moisturizing Lotion',
-                        brand: 'CeraVe',
-                        price: '$15.99',
-                        budget: 'affordable',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                        rating: 4.7,
-                        reviews: 45600,
-                        description: 'Daily moisturizer with ceramides and hyaluronic acid',
-                        ingredients: ['Ceramides', 'Hyaluronic Acid', 'MVE Technology'],
-                        features: ['Non-Comedogenic', 'Fragrance-Free', 'Dermatologist Recommended'],
-                        skinConcerns: ['Daily Hydration', 'Barrier Support', 'Lightweight Moisture'],
-                        usage: 'Use morning and evening'
-                    },
-                    // Premium Options
-                    {
                         id: 'normal-premium-1',
                         name: 'SkinCeuticals C E Ferulic',
                         brand: 'SkinCeuticals',
@@ -1083,36 +718,11 @@
                         features: ['Vegan', 'Cruelty-Free', 'Silicone-Free'],
                         skinConcerns: ['Firmness', 'Elasticity', 'Protein Support'],
                         usage: 'Use morning and evening'
-                    },
-                    {
-                        id: 'normal-premium-3',
-                        name: 'La Mer The Moisturizing Soft Cream',
-                        brand: 'La Mer',
-                        price: '$345.00',
-                        budget: 'premium',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                        rating: 4.4,
-                        reviews: 2100,
-                        description: 'Luxury moisturizer with Miracle Broth',
-                        ingredients: ['Miracle Broth', 'Lime Tea', 'Algae Extract'],
-                        features: ['Luxury Formula', 'Signature Complex', 'Anti-Aging'],
-                        skinConcerns: ['Luxury Care', 'Anti-Aging', 'Intensive Moisture'],
-                        usage: 'Use sparingly morning and evening'
                     }
                 ],
                 scienceExplanations: [
-                    {
-                        title: "Preventive Skincare Science",
-                        content: "Normal skin is the ideal baseline - balanced oil production, adequate hydration, and minimal concerns. The focus should be on prevention rather than treatment, using antioxidants to protect against environmental damage."
-                    },
-                    {
-                        title: "Vitamin C: The Master Antioxidant",
-                        content: "Vitamin C neutralizes free radicals from UV exposure and pollution, stimulates collagen production, and inhibits melanin synthesis. It's essential for preventing premature aging in normal skin."
-                    },
-                    {
-                        title: "Maintaining Skin Homeostasis",
-                        content: "Normal skin has optimal barrier function and microbiome balance. The goal is to maintain this state through gentle cleansing, adequate hydration, and protection from environmental stressors."
-                    }
+                    { title: "Preventive Skincare Science", content: "Normal skin is the ideal baseline - balanced oil production, adequate hydration, and minimal concerns. The focus should be on prevention rather than treatment, using antioxidants to protect against environmental damage." },
+                    { title: "Vitamin C: The Master Antioxidant", content: "Vitamin C neutralizes free radicals from UV exposure and pollution, stimulates collagen production, and inhibits melanin synthesis. It's essential for preventing premature aging in normal skin." }
                 ]
             },
             'Sensitive Skin': {
@@ -1120,91 +730,20 @@
                 concerns: ['Redness', 'Irritation', 'Reactivity', 'Barrier Weakness', 'Stinging'],
                 keyIngredients: ['Centella Asiatica', 'Ceramides', 'Niacinamide', 'Oat Extract', 'Aloe Vera'],
                 morningRoutine: [
-                    {
-                        step: 1,
-                        product: 'Ultra-Gentle Cleanser',
-                        type: 'Cleanser',
-                        purpose: 'Cleanse without disrupting skin barrier',
-                        application: '10-second contact time maximum',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 2,
-                        product: 'Calming Toner/Essence',
-                        type: 'Soother',
-                        purpose: 'Reduce redness and prepare skin',
-                        application: 'Pat gently with hands, no rubbing',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 3,
-                        product: 'Barrier Repair Serum',
-                        type: 'Treatment',
-                        purpose: 'Strengthen skin barrier',
-                        application: 'Apply to slightly damp skin',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 4,
-                        product: 'Gentle Moisturizer',
-                        type: 'Moisturizer',
-                        purpose: 'Provide protection and hydration',
-                        application: 'Gentle pressing motion',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 5,
-                        product: 'Mineral Sunscreen',
-                        type: 'Sun Protection',
-                        purpose: 'Physical protection without irritation',
-                        application: 'Pat gently, avoid rubbing',
-                        timing: 'Daily'
-                    }
+                    { step: 1, product: 'Ultra-Gentle Cleanser', type: 'Cleanser', purpose: 'Cleanse without disrupting skin barrier', application: '10-second contact time maximum', timing: 'Daily' },
+                    { step: 2, product: 'Calming Toner/Essence', type: 'Soother', purpose: 'Reduce redness and prepare skin', application: 'Pat gently with hands, no rubbing', timing: 'Daily' },
+                    { step: 3, product: 'Barrier Repair Serum', type: 'Treatment', purpose: 'Strengthen skin barrier', application: 'Apply to slightly damp skin', timing: 'Daily' },
+                    { step: 4, product: 'Gentle Moisturizer', type: 'Moisturizer', purpose: 'Provide protection and hydration', application: 'Gentle pressing motion', timing: 'Daily' },
+                    { step: 5, product: 'Mineral Sunscreen', type: 'Sun Protection', purpose: 'Physical protection without irritation', application: 'Pat gently, avoid rubbing', timing: 'Daily' }
                 ],
                 eveningRoutine: [
-                    {
-                        step: 1,
-                        product: 'Micellar Water/Cleansing Milk',
-                        type: 'Cleanser',
-                        purpose: 'Remove makeup and impurities gently',
-                        application: 'Soak cotton pad, gentle swipes',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 2,
-                        product: 'Gentle Cream Cleanser',
-                        type: 'Cleanser',
-                        purpose: 'Second cleanse without stripping',
-                        application: 'Minimal contact time, cool water',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 3,
-                        product: 'Calming Treatment',
-                        type: 'Treatment',
-                        purpose: 'Reduce inflammation and redness',
-                        application: 'Wait for skin to calm between steps',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 4,
-                        product: 'Rich Moisturizer',
-                        type: 'Moisturizer',
-                        purpose: 'Intensive barrier support',
-                        application: 'Generous amount, gentle application',
-                        timing: 'Daily'
-                    },
-                    {
-                        step: 5,
-                        product: 'Facial Oil (Optional)',
-                        type: 'Occlusive',
-                        purpose: 'Extra barrier protection',
-                        application: '2-3 drops, press gently',
-                        timing: 'As needed'
-                    }
+                    { step: 1, product: 'Micellar Water/Cleansing Milk', type: 'Cleanser', purpose: 'Remove makeup and impurities gently', application: 'Soak cotton pad, gentle swipes', timing: 'Daily' },
+                    { step: 2, product: 'Gentle Cream Cleanser', type: 'Cleanser', purpose: 'Second cleanse without stripping', application: 'Minimal contact time, cool water', timing: 'Daily' },
+                    { step: 3, product: 'Calming Treatment', type: 'Treatment', purpose: 'Reduce inflammation and redness', application: 'Wait for skin to calm between steps', timing: 'Daily' },
+                    { step: 4, product: 'Rich Moisturizer', type: 'Moisturizer', purpose: 'Intensive barrier support', application: 'Generous amount, gentle application', timing: 'Daily' },
+                    { step: 5, product: 'Facial Oil (Optional)', type: 'Occlusive', purpose: 'Extra barrier protection', application: '2-3 drops, press gently', timing: 'As needed' }
                 ],
                 products: [
-                    // Budget-Friendly Options
                     {
                         id: 'sensitive-budget-1',
                         name: 'Avene Tolerance Control Cleanser',
@@ -1236,22 +775,6 @@
                         usage: 'Use morning and evening'
                     },
                     {
-                        id: 'sensitive-budget-3',
-                        name: 'CeraVe PM Facial Moisturizing Lotion',
-                        brand: 'CeraVe',
-                        price: '$13.99',
-                        budget: 'affordable',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                        rating: 4.6,
-                        reviews: 28900,
-                        description: 'Night moisturizer with ceramides and niacinamide',
-                        ingredients: ['Ceramides', 'Niacinamide', 'Hyaluronic Acid'],
-                        features: ['Fragrance-Free', 'Non-Comedogenic', 'Dermatologist Recommended'],
-                        skinConcerns: ['Barrier Repair', 'Gentle Hydration', 'Night Care'],
-                        usage: 'Use in evening, can be used morning too'
-                    },
-                    // Premium Options
-                    {
                         id: 'sensitive-premium-1',
                         name: 'Drunk Elephant Lala Retro Whipped Cream',
                         brand: 'Drunk Elephant',
@@ -1280,59 +803,22 @@
                         features: ['Natural Ingredients', 'Anti-Redness', 'Luxury Formula'],
                         skinConcerns: ['Redness', 'Sensitivity', 'Luxury Care'],
                         usage: 'Use morning and evening'
-                    },
-                    {
-                        id: 'sensitive-premium-3',
-                        name: 'Augustinus Bader The Rich Cream',
-                        brand: 'Augustinus Bader',
-                        price: '$290.00',
-                        budget: 'premium',
-                        image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                        rating: 4.8,
-                        reviews: 1200,
-                        description: 'Luxury cream with TFC8 complex for sensitive skin',
-                        ingredients: ['TFC8 Complex', 'Hyaluronic Acid', 'Ceramides'],
-                        features: ['Clinical Results', 'Fragrance-Free', 'Patented Technology'],
-                        skinConcerns: ['Luxury Care', 'Anti-Aging', 'Sensitive Skin'],
-                        usage: 'Use sparingly, patch test first'
                     }
                 ],
                 scienceExplanations: [
-                    {
-                        title: "Understanding Skin Reactivity",
-                        content: "Sensitive skin has a compromised barrier function and heightened nerve responses. The stratum corneum is thinner, allowing irritants to penetrate more easily and trigger inflammatory responses."
-                    },
-                    {
-                        title: "The Importance of pH Balance",
-                        content: "Sensitive skin often has an altered pH level. Healthy skin pH is around 4.7-5.5. Using pH-balanced products helps maintain the acid mantle, which protects against pathogens and irritation."
-                    },
-                    {
-                        title: "Barrier Repair Science",
-                        content: "The skin barrier in sensitive skin lacks sufficient ceramides, cholesterol, and fatty acids. Replenishing these lipids helps restore barrier function and reduce reactivity over time."
-                    }
+                    { title: "Understanding Skin Reactivity", content: "Sensitive skin has a compromised barrier function and heightened nerve responses. The stratum corneum is thinner, allowing irritants to penetrate more easily and trigger inflammatory responses." },
+                    { title: "The Importance of pH Balance", content: "Sensitive skin often has an altered pH level. Healthy skin pH is around 4.7-5.5. Using pH-balanced products helps maintain the acid mantle, which protects against pathogens and irritation." }
                 ]
             }
         };
 
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-        });
-
-        function initializeApp() {
-            console.log('SkinCast AI initialized');
-            // Add any initialization code here
-        }
-
-        // Camera functions
+        /* =========================================================
+           CAMERA & SCAN ANIMATION
+        ========================================================== */
         async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        width: 640, 
-                        height: 480,
-                        facingMode: 'user'
-                    } 
+                    video: { width: 640, height: 480, facingMode: 'user' } 
                 });
                 
                 const video = document.getElementById('webcam-video');
@@ -1350,8 +836,8 @@
                 
                 isCameraOn = true;
                 
-                // Show camera overlay
-                document.getElementById('camera-overlay').classList.remove('hidden');
+                // Show scan animation
+                document.getElementById('scan-animation').classList.remove('hidden');
                 
             } catch (error) {
                 console.error('Error accessing camera:', error);
@@ -1376,8 +862,8 @@
             
             isCameraOn = false;
             
-            // Hide camera overlay
-            document.getElementById('camera-overlay').classList.add('hidden');
+            // Hide scan animation
+            document.getElementById('scan-animation').classList.add('hidden');
             
             if (predictionInterval) {
                 clearInterval(predictionInterval);
@@ -1391,7 +877,6 @@
                 return;
             }
             
-            // Simulate AI analysis
             showLoading();
             
             setTimeout(() => {
@@ -1400,9 +885,6 @@
                 const randomSkinType = skinTypes[Math.floor(Math.random() * skinTypes.length)];
                 
                 updatePredictionDisplay(randomSkinType);
-                
-                // Enable capture button
-                document.getElementById('captureBtn').disabled = false;
                 
             }, 2000);
         }
@@ -1418,14 +900,15 @@
             `;
         }
 
+        /* =========================================================
+           DEMO & RESULTS
+        ========================================================== */
         function showDemoResults() {
-            // Show loading
             showLoading();
             
             setTimeout(() => {
                 hideLoading();
                 
-                // Simulate analysis results
                 const skinTypes = ['Acne-Prone Skin', 'Dry Skin', 'Combination Skin', 'Normal Skin', 'Sensitive Skin'];
                 currentSkinType = skinTypes[Math.floor(Math.random() * skinTypes.length)];
                 
@@ -1449,7 +932,6 @@
         function showResults() {
             document.getElementById('results-section').classList.remove('hidden');
             
-            // Update skin type result
             const skinTypeResult = document.getElementById('skin-type-result');
             skinTypeResult.innerHTML = `
                 <div class="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-4 rounded-2xl inline-block">
@@ -1458,19 +940,11 @@
                 </div>
             `;
             
-            // Create concerns chart
             createConcernsChart();
-            
-            // Load products
             loadProducts();
-            
-            // Load routines
             loadRoutines();
-            
-            // Load science content
             loadScienceContent();
             
-            // Scroll to results
             document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -1613,17 +1087,14 @@
         }
 
         function switchTab(tabName) {
-            // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
             });
             
-            // Remove active class from all tab buttons
             document.querySelectorAll('.tab-button').forEach(button => {
                 button.classList.remove('active');
             });
             
-            // Show selected tab content
             document.getElementById(`${tabName}-tab`).classList.remove('hidden');
             document.getElementById(`tab-${tabName}`).classList.add('active');
         }
@@ -1632,11 +1103,9 @@
             const products = document.querySelectorAll('.product-card');
             const buttons = document.querySelectorAll('.filter-btn');
             
-            // Update button states
             buttons.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
-            // Filter products
             products.forEach(product => {
                 if (budget === 'all') {
                     product.style.display = 'block';
@@ -1656,16 +1125,13 @@
         }
 
         function startNewAnalysis() {
-            // Reset everything
             document.getElementById('results-section').classList.add('hidden');
             stopCamera();
             
-            // Reset prediction display
             document.getElementById('prediction-display').innerHTML = `
                 <p class="text-white/80 text-center">Start camera to see real-time analysis</p>
             `;
             
-            // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -1677,7 +1143,6 @@
                     url: window.location.href
                 });
             } else {
-                // Fallback for browsers that don't support Web Share API
                 const text = `I just got my personalized skincare analysis from SkinCast AI! My skin type is ${currentSkinType}. Check it out: ${window.location.href}`;
                 navigator.clipboard.writeText(text).then(() => {
                     showNotification('Results copied to clipboard!', 'success');
@@ -1696,7 +1161,6 @@
         }
 
         function showNotification(message, type = 'info') {
-            // Create notification element
             const notification = document.createElement('div');
             notification.className = `fixed top-4 right-4 z-50 p-4 rounded-xl text-white max-w-sm ${
                 type === 'success' ? 'bg-green-500' : 
@@ -1717,13 +1181,11 @@
             
             document.body.appendChild(notification);
             
-            // Remove after 3 seconds
             setTimeout(() => {
                 notification.remove();
             }, 3000);
         }
 
-        // Add some utility functions for enhanced UX
         function createProgressChart() {
             const data = [{
                 x: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
@@ -1747,7 +1209,6 @@
             Plotly.newPlot('progress-chart', data, layout, {responsive: true});
         }
 
-        // Initialize progress chart when progress tab is clicked
         document.addEventListener('click', function(e) {
             if (e.target.id === 'tab-progress') {
                 setTimeout(createProgressChart, 100);
