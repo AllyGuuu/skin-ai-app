@@ -1,1763 +1,376 @@
-        // Save to localStorage
-        localStorage.setItem('skincastUser', JSON.stringify(user));
-        localStorage.setItem(`skincastUser_${user.id}`, JSON.stringify(user));
-        
-        currentUser = user;
-        closeAuth();
-        showUserMenu();
-        showNotification('Account created successfully!', 'success');
-    }
-
-    function handleLogin(event) {
-        event.preventDefault();
-        
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-        
-        // Find user in localStorage
-        const users = Object.keys(localStorage)
-            .filter(key => key.startsWith('skincastUser_'))
-            .map(key => JSON.parse(localStorage.getItem(key)));
-        
-        const user = users.find(u => u.email === email && u.password === password);
-        
-        if (user) {
-            currentUser = user;
-            localStorage.setItem('skincastUser', JSON.stringify(user));
-            closeAuth();
-            showUserMenu();
-            loadUserData();
-            showNotification('Logged in successfully!', 'success');
-        } else {
-            showNotification('Invalid email or password', 'error');
-        }
-    }
-
-    function logout() {
-        currentUser = null;
-        localStorage.removeItem('skincastUser');
-        document.getElementById('auth-buttons').classList.remove('hidden');
-        document.getElementById('user-menu').classList.add('hidden');
-        showNotification('Logged out successfully', 'info');
-        location.reload();
-    }
-
-    function showUserMenu() {
-        document.getElementById('auth-buttons').classList.add('hidden');
-        document.getElementById('user-menu').classList.remove('hidden');
-        document.getElementById('user-name').textContent = currentUser.name.split(' ')[0];
-    }
-
-    function viewDashboard() {
-        // Scroll to results or show user dashboard
-        if (document.getElementById('results-section').classList.contains('hidden')) {
-            showNotification('Please complete an analysis first', 'warning');
-        } else {
-            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
-        }
-    }
-
-    function loadUserData() {
-        if (!currentUser || !currentSkinType) return;
-        
-        // Load user's saved data
-        const analyses = currentUser.analyses || [];
-        const savedProducts = currentUser.savedProducts || [];
-        
-        // Update UI with saved data
-        if (analyses.length > 0) {
-            const lastAnalysis = analyses[analyses.length - 1];
-            currentSkinType = lastAnalysis.skinType;
-            skinAnalysis = lastAnalysis;
-            showResults();
-        }
-        
-        // Mark saved products as saved
-        savedProducts.forEach(productId => {
-            const btn = document.querySelector(`button[onclick="addToRoutine('${productId}')"]`);
-            if (btn) {
-                btn.innerHTML = '<i class="fas fa-check mr-2"></i>Saved';
-                btn.classList.add('bg-green-500');
-                btn.classList.remove('bg-gradient-to-r');
-            }
-        });
-    }
-
-    /* =========================================================
-       ENHANCED PRODUCT DATABASE
-    ========================================================== */
-    const productDatabase = {
-        'Acne-Prone Skin': {
-            description: 'Products to control oil, reduce inflammation, and prevent breakouts',
-            concerns: ['Breakouts', 'Excess Oil', 'Inflammation', 'Clogged Pores'],
-            keyIngredients: ['Salicylic Acid', 'Niacinamide', 'Benzoyl Peroxide', 'Retinol'],
-            morningRoutine: [
-                { step: 1, product: 'Gentle Cleanser', type: 'Cleanser', purpose: 'Remove overnight oil without stripping', application: 'Massage for 30 seconds, rinse with cool water', timing: 'Daily' },
-                { step: 2, product: 'Niacinamide Serum', type: 'Treatment', purpose: 'Control oil production', application: '3-4 drops on oily areas', timing: 'Daily' },
-                { step: 3, product: 'Lightweight Moisturizer', type: 'Moisturizer', purpose: 'Hydrate without clogging pores', application: 'Pea-sized amount, avoid heavy application', timing: 'Daily' },
-                { step: 4, product: 'Oil-Free Sunscreen', type: 'Sun Protection', purpose: 'Protect from UV damage', application: 'Apply 15 minutes before sun exposure', timing: 'Daily' }
-            ],
-            eveningRoutine: [
-                { step: 1, product: 'Cleanser', type: 'Cleanser', purpose: 'Remove makeup and daily buildup', application: 'Double cleanse if wearing makeup', timing: 'Daily' },
-                { step: 2, product: 'Exfoliating Treatment', type: 'Treatment', purpose: 'Unclog pores and prevent breakouts', application: 'Focus on problem areas, avoid eye area', timing: '3-4 times weekly' },
-                { step: 3, product: 'Treatment Serum', type: 'Treatment', purpose: 'Target active breakouts', application: 'Spot treatment or all over face', timing: 'Daily' },
-                { step: 4, product: 'Light Moisturizer', type: 'Moisturizer', purpose: 'Maintain skin barrier', application: 'Allow treatments to absorb first', timing: 'Daily' }
-            ],
-            products: [
-                {
-                    id: 'acne-budget-1',
-                    name: 'CeraVe Acne Foaming Cream Cleanser',
-                    brand: 'CeraVe',
-                    price: '$14.99',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 12500,
-                    description: '4% benzoyl peroxide cleanser for acne treatment',
-                    ingredients: ['Benzoyl Peroxide 4%', 'Niacinamide', 'Ceramides'],
-                    features: ['Oil-Free', 'Non-Comedogenic', 'Dermatologist Recommended'],
-                    skinConcerns: ['Acne', 'Oil Control', 'Pore Minimizing'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'acne-budget-2',
-                    name: 'The Ordinary Niacinamide 10% + Zinc 1%',
-                    brand: 'The Ordinary',
-                    price: '$6.80',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 45800,
-                    description: 'Oil control and pore minimizing serum',
-                    ingredients: ['Niacinamide 10%', 'Zinc PCA 1%'],
-                    features: ['Vegan', 'Oil-Free', 'Fragrance-Free'],
-                    skinConcerns: ['Oil Control', 'Pore Minimizing', 'Breakouts'],
-                    usage: 'Use after cleansing, before moisturizer'
-                },
-                {
-                    id: 'acne-premium-1',
-                    name: 'Paula\'s Choice 2% BHA Liquid Exfoliant',
-                    brand: 'Paula\'s Choice',
-                    price: '$32.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.7,
-                    reviews: 15600,
-                    description: 'Salicylic acid exfoliant for pore clearing',
-                    ingredients: ['Salicylic Acid 2%', 'Green Tea Extract', 'Methylpropanediol'],
-                    features: ['Fragrance-Free', 'Cruelty-Free', 'Dermatologist Recommended'],
-                    skinConcerns: ['Blackheads', 'Enlarged Pores', 'Uneven Texture'],
-                    usage: 'Use 2-3 times weekly after cleansing'
-                },
-                {
-                    id: 'acne-premium-2',
-                    name: 'SkinCeuticals Blemish + Age Defense',
-                    brand: 'SkinCeuticals',
-                    price: '$92.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 1200,
-                    description: 'Dual-action serum for acne and aging concerns',
-                    ingredients: ['Salicylic Acid', 'Glycolic Acid', 'Dioic Acid'],
-                    features: ['Oil-Free', 'Fragrance-Free', 'Clinical Grade'],
-                    skinConcerns: ['Acne', 'Fine Lines', 'Uneven Tone'],
-                    usage: 'Use once daily, gradually increase to twice daily'
-                }
-            ],
-            scienceExplanations: [
-                { title: "Salicylic Acid: The Pore-Clearing Powerhouse", content: "Salicylic Acid is a beta-hydroxy acid (BHA) that's oil-soluble, allowing it to penetrate deep into pores. It works by dissolving the 'glue' that holds dead skin cells together, preventing clogged pores and reducing existing blackheads and whiteheads." },
-                { title: "Niacinamide: The Multi-Tasking Marvel", content: "Niacinamide (Vitamin B3) regulates sebum production, reduces inflammation, and strengthens the skin barrier. Studies show it can reduce acne lesions by up to 60% when used consistently." }
-            ]
-        },
-        'Dry Skin': {
-            description: 'Products to hydrate, repair barrier, and restore moisture balance',
-            concerns: ['Dehydration', 'Flakiness', 'Tightness', 'Barrier Damage'],
-            keyIngredients: ['Hyaluronic Acid', 'Ceramides', 'Squalane', 'Peptides'],
-            morningRoutine: [
-                { step: 1, product: 'Gentle Cream Cleanser', type: 'Cleanser', purpose: 'Cleanse without stripping natural oils', application: 'Massage gently, rinse with lukewarm water', timing: 'Daily' },
-                { step: 2, product: 'Hydrating Toner/Essence', type: 'Hydrator', purpose: 'Prepare skin for better product absorption', application: 'Pat into damp skin', timing: 'Daily' },
-                { step: 3, product: 'Hydrating Serum', type: 'Treatment', purpose: 'Deep hydration and moisture retention', application: 'Apply to damp skin, press gently', timing: 'Daily' },
-                { step: 4, product: 'Rich Moisturizer', type: 'Moisturizer', purpose: 'Seal in hydration and repair barrier', application: 'Allow serums to absorb first', timing: 'Daily' },
-                { step: 5, product: 'Facial Oil (Optional)', type: 'Occlusive', purpose: 'Extra protection and nourishment', application: '2-3 drops pressed into skin', timing: 'As needed' }
-            ],
-            eveningRoutine: [
-                { step: 1, product: 'Cleansing Balm/Oil', type: 'Cleanser', purpose: 'Remove makeup and sunscreen', application: 'Massage onto dry skin, emulsify with water', timing: 'Daily' },
-                { step: 2, product: 'Gentle Cleanser', type: 'Cleanser', purpose: 'Second cleanse to remove residue', application: 'Focus on massaging, not scrubbing', timing: 'Daily' },
-                { step: 3, product: 'Treatment Serum', type: 'Treatment', purpose: 'Address specific concerns (aging, texture)', application: 'Wait 20 minutes after acids', timing: '3-4 times weekly' },
-                { step: 4, product: 'Hydrating Serum', type: 'Treatment', purpose: 'Replenish moisture', application: 'Layer if using multiple serums', timing: 'Daily' },
-                { step: 5, product: 'Night Cream', type: 'Moisturizer', purpose: 'Intensive overnight hydration', application: 'Generous amount, massage thoroughly', timing: 'Daily' }
-            ],
-            products: [
-                {
-                    id: 'dry-budget-1',
-                    name: 'CeraVe Hydrating Facial Cleanser',
-                    brand: 'CeraVe',
-                    price: '$13.99',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 24500,
-                    description: 'Gentle cleanser with ceramides and hyaluronic acid',
-                    ingredients: ['Ceramides', 'Hyaluronic Acid', 'Glycerin'],
-                    features: ['Fragrance-Free', 'Non-Comedogenic', 'Dermatologist Recommended'],
-                    skinConcerns: ['Dryness', 'Dehydration', 'Barrier Repair'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'dry-budget-2',
-                    name: 'The Ordinary Hyaluronic Acid 2% + B5',
-                    brand: 'The Ordinary',
-                    price: '$6.80',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 45800,
-                    description: 'Hydration support formula with vitamin B5',
-                    ingredients: ['Hyaluronic Acid', 'Vitamin B5', 'Crosspolymer'],
-                    features: ['Vegan', 'Oil-Free', 'Alcohol-Free'],
-                    skinConcerns: ['Dehydration', 'Fine Lines', 'Plumping'],
-                    usage: 'Apply to damp skin morning and evening'
-                },
-                {
-                    id: 'dry-premium-1',
-                    name: 'SkinCeuticals Hydrating B5 Gel',
-                    brand: 'SkinCeuticals',
-                    price: '$86.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.7,
-                    reviews: 3400,
-                    description: 'Oil-free hydrating serum with hyaluronic acid',
-                    ingredients: ['Hyaluronic Acid', 'Vitamin B5', 'Phenoxyethanol'],
-                    features: ['Oil-Free', 'Fragrance-Free', 'Clinical Grade'],
-                    skinConcerns: ['Dehydration', 'Fine Lines', 'Sensitive Skin'],
-                    usage: 'Use 2-3 drops morning and evening'
-                },
-                {
-                    id: 'dry-premium-2',
-                    name: 'Drunk Elephant Lala Retro Whipped Cream',
-                    brand: 'Drunk Elephant',
-                    price: '$60.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 5600,
-                    description: 'Whipped moisturizer with African oils and ceramides',
-                    ingredients: ['African Oils', 'Ceramides', 'Hyaluronic Acid', 'Antioxidants'],
-                    features: ['Cruelty-Free', 'Fragrance-Free', 'Silicone-Free'],
-                    skinConcerns: ['Dryness', 'Barrier Repair', 'Anti-Aging'],
-                    usage: 'Use as final step morning and evening'
-                }
-            ],
-            scienceExplanations: [
-                { title: "Hyaluronic Acid: The Moisture Magnet", content: "Hyaluronic Acid can hold up to 1000 times its weight in water, making it a powerful humectant. It draws moisture from the environment into the skin, providing immediate plumping and long-term hydration benefits." },
-                { title: "Ceramides: The Skin Barrier Builders", content: "Ceramides are lipids that make up 50% of the skin's barrier. They act like mortar between skin cells, preventing moisture loss and protecting against environmental damage. Dry skin often lacks sufficient ceramides." }
-            ]
-        },
-        'Combination Skin': {
-            description: 'Products that balance oil production while hydrating dry areas',
-            concerns: ['Oily T-zone', 'Dry Cheeks', 'Enlarged Pores', 'Uneven Texture'],
-            keyIngredients: ['Niacinamide', 'Hyaluronic Acid', 'Salicylic Acid', 'Ceramides'],
-            morningRoutine: [
-                { step: 1, product: 'Gentle Gel Cleanser', type: 'Cleanser', purpose: 'Balance cleansing without over-drying', application: 'Focus on T-zone, gentle on cheeks', timing: 'Daily' },
-                { step: 2, product: 'Balancing Toner', type: 'Toner', purpose: 'Prepare skin and balance pH', application: 'Apply with hands, pat gently', timing: 'Daily' },
-                { step: 3, product: 'Niacinamide Serum', type: 'Treatment', purpose: 'Regulate oil production', application: 'Focus on oily areas, light layer on dry areas', timing: 'Daily' },
-                { step: 4, product: 'Lightweight Moisturizer', type: 'Moisturizer', purpose: 'Hydrate without heaviness', application: 'Adjust amount based on facial zones', timing: 'Daily' },
-                { step: 5, product: 'Mattifying Sunscreen', type: 'Sun Protection', purpose: 'Control shine and protect', application: 'Focus on T-zone for mattifying effect', timing: 'Daily' }
-            ],
-            eveningRoutine: [
-                { step: 1, product: 'Cleansing Oil/Gel', type: 'Cleanser', purpose: 'Remove makeup and sunscreen', application: 'Massage thoroughly, especially on oily areas', timing: 'Daily' },
-                { step: 2, product: 'Gentle Cleanser', type: 'Cleanser', purpose: 'Second cleanse for thorough cleaning', application: 'Gentle massage, avoid over-cleansing dry areas', timing: 'Daily' },
-                { step: 3, product: 'BHA Treatment', type: 'Exfoliant', purpose: 'Unclog pores in oily areas', application: 'Apply only to T-zone if cheeks are sensitive', timing: '3-4 times weekly' },
-                { step: 4, product: 'Hydrating Serum', type: 'Treatment', purpose: 'Address dry cheek areas', application: 'Focus on dry areas, light layer elsewhere', timing: 'Daily' },
-                { step: 5, product: 'Balancing Moisturizer', type: 'Moisturizer', purpose: 'Hydrate without clogging', application: 'More on dry areas, less on oily areas', timing: 'Daily' }
-            ],
-            products: [
-                {
-                    id: 'combo-budget-1',
-                    name: 'Cetaphil Daily Facial Cleanser',
-                    brand: 'Cetaphil',
-                    price: '$11.99',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.4,
-                    reviews: 18200,
-                    description: 'Gentle cleanser for combination skin',
-                    ingredients: ['Glycerin', 'Niacinamide', 'Panthenol'],
-                    features: ['Soap-Free', 'Non-Comedogenic', 'Dermatologist Recommended'],
-                    skinConcerns: ['Combination Skin', 'Gentle Cleansing', 'pH Balance'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'combo-budget-2',
-                    name: 'The Ordinary Niacinamide 10% + Zinc 1%',
-                    brand: 'The Ordinary',
-                    price: '$6.80',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 45800,
-                    description: 'Oil control and pore minimizing serum',
-                    ingredients: ['Niacinamide 10%', 'Zinc PCA 1%'],
-                    features: ['Vegan', 'Oil-Free', 'Fragrance-Free'],
-                    skinConcerns: ['Oil Control', 'Pore Minimizing', 'Breakout Prevention'],
-                    usage: 'Use after cleansing, focus on T-zone'
-                },
-                {
-                    id: 'combo-premium-1',
-                    name: 'Youth to the People Superfood Cleanser',
-                    brand: 'Youth to the People',
-                    price: '$36.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 8900,
-                    description: 'Cold-pressed antioxidants rich cleanser',
-                    ingredients: ['Kale', 'Spinach', 'Green Tea', 'Vitamins'],
-                    features: ['Vegan', 'Cruelty-Free', 'Cold-Pressed'],
-                    skinConcerns: ['Combination Skin', 'Antioxidant Protection', 'Gentle Cleansing'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'combo-premium-2',
-                    name: 'Tatcha The Water Cream',
-                    brand: 'Tatcha',
-                    price: '$68.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 3400,
-                    description: 'Oil-free anti-aging water cream',
-                    ingredients: ['Japanese Wild Rose', 'Hadasei-3 Complex', 'Tatcha\'s Signature'],
-                    features: ['Oil-Free', 'Non-Comedogenic', 'Anti-Aging'],
-                    skinConcerns: ['Combination Skin', 'Pore Refining', 'Anti-Aging'],
-                    usage: 'Use morning and evening'
-                }
-            ],
-            scienceExplanations: [
-                { title: "Zone-Based Skincare Science", content: "Combination skin requires different approaches for different facial zones. The T-zone has more sebaceous glands per square inch than other facial areas, requiring oil control, while cheeks need hydration support." },
-                { title: "Niacinamide: The Balancing Act", content: "Niacinamide helps regulate sebum production in oily areas while strengthening the skin barrier in dry areas. It's particularly effective for combination skin as it addresses multiple concerns simultaneously." }
-            ]
-        },
-        'Normal Skin': {
-            description: 'Products to maintain balance and provide preventive care',
-            concerns: ['Maintenance', 'Prevention', 'Environmental Protection', 'Healthy Glow'],
-            keyIngredients: ['Vitamin C', 'Peptides', 'Antioxidants', 'Hyaluronic Acid'],
-            morningRoutine: [
-                { step: 1, product: 'Gentle Cleanser', type: 'Cleanser', purpose: 'Refresh skin and remove overnight impurities', application: 'Gentle circular motions, rinse with lukewarm water', timing: 'Daily' },
-                { step: 2, product: 'Vitamin C Serum', type: 'Antioxidant', purpose: 'Protect against environmental damage', application: 'Apply to clean, dry skin', timing: 'Daily' },
-                { step: 3, product: 'Light Moisturizer', type: 'Moisturizer', purpose: 'Maintain hydration balance', application: 'Pea-sized amount, massage gently', timing: 'Daily' },
-                { step: 4, product: 'Broad Spectrum Sunscreen', type: 'Sun Protection', purpose: 'Prevent premature aging and damage', application: 'Apply 15 minutes before sun exposure', timing: 'Daily' }
-            ],
-            eveningRoutine: [
-                { step: 1, product: 'Cleansing Balm/Gel', type: 'Cleanser', purpose: 'Remove makeup, sunscreen, and daily buildup', application: 'Massage thoroughly, especially on sunscreen areas', timing: 'Daily' },
-                { step: 2, product: 'Treatment Serum', type: 'Treatment', purpose: 'Address specific concerns (anti-aging, texture)', application: 'Allow to absorb completely', timing: '3-4 times weekly' },
-                { step: 3, product: 'Hydrating Serum', type: 'Hydration', purpose: 'Maintain optimal moisture levels', application: 'Apply while skin is still slightly damp', timing: 'Daily' },
-                { step: 4, product: 'Night Moisturizer', type: 'Moisturizer', purpose: 'Support overnight skin repair', application: 'Generous amount, allow to absorb', timing: 'Daily' }
-            ],
-            products: [
-                {
-                    id: 'normal-budget-1',
-                    name: 'Vanicream Gentle Facial Cleanser',
-                    brand: 'Vanicream',
-                    price: '$8.99',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 12300,
-                    description: 'Gentle cleanser for sensitive normal skin',
-                    ingredients: ['Glycerin', 'Purified Water', 'Cocoyl Glycinate'],
-                    features: ['Fragrance-Free', 'Soap-Free', 'Dermatologist Recommended'],
-                    skinConcerns: ['Gentle Cleansing', 'Sensitive Skin', 'Daily Use'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'normal-budget-2',
-                    name: 'The Ordinary Vitamin C Suspension 23%',
-                    brand: 'The Ordinary',
-                    price: '$5.80',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.3,
-                    reviews: 28900,
-                    description: 'Direct vitamin C for brightening',
-                    ingredients: ['Vitamin C 23%', 'Hyaluronic Acid', 'Silicone'],
-                    features: ['Vegan', 'Cruelty-Free', 'Direct Vitamin C'],
-                    skinConcerns: ['Brightening', 'Anti-Aging', 'Antioxidant Protection'],
-                    usage: 'Use in morning, can be mixed with moisturizer'
-                },
-                {
-                    id: 'normal-premium-1',
-                    name: 'SkinCeuticals C E Ferulic',
-                    brand: 'SkinCeuticals',
-                    price: '$169.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.8,
-                    reviews: 4200,
-                    description: 'Advanced antioxidant vitamin C serum',
-                    ingredients: ['Vitamin C 15%', 'Vitamin E', 'Ferulic Acid'],
-                    features: ['Clinical Results', 'Patented Formula', 'Dermatologist Developed'],
-                    skinConcerns: ['Anti-Aging', 'Environmental Protection', 'Brightening'],
-                    usage: 'Use 4-5 drops in morning after cleansing'
-                },
-                {
-                    id: 'normal-premium-2',
-                    name: 'Drunk Elephant Protini Polypeptide Cream',
-                    brand: 'Drunk Elephant',
-                    price: '$68.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 7800,
-                    description: 'Protein moisturizer with peptides and amino acids',
-                    ingredients:: 'Balancing Moisturizer', type: 'Moisturizer', purpose: 'Hydrate without clogging', application: 'More on dry areas, less on oily areas', timing: 'Daily' }
-            ],
-            products: [
-                {
-                    id: 'combo-budget-1',
-                    name: 'Cetaphil Daily Facial Cleanser',
-                    brand: 'Cetaphil',
-                    price: '$11.99',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.4,
-                    reviews: 18200,
-                    description: 'Gentle cleanser for combination skin',
-                    ingredients: ['Glycerin', 'Niacinamide', 'Panthenol'],
-                    features: ['Soap-Free', 'Non-Comedogenic', 'Dermatologist Recommended'],
-                    skinConcerns: ['Combination Skin', 'Gentle Cleansing', 'pH Balance'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'combo-budget-2',
-                    name: 'The Ordinary Niacinamide 10% + Zinc 1%',
-                    brand: 'The Ordinary',
-                    price: '$6.80',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 45800,
-                    description: 'Oil control and pore minimizing serum',
-                    ingredients: ['Niacinamide 10%', 'Zinc PCA 1%'],
-                    features: ['Vegan', 'Oil-Free', 'Fragrance-Free'],
-                    skinConcerns: ['Oil Control', 'Pore Minimizing', 'Breakout Prevention'],
-                    usage: 'Use after cleansing, focus on T-zone'
-                },
-                {
-                    id: 'combo-premium-1',
-                    name: 'Youth to the People Superfood Cleanser',
-                    brand: 'Youth to the People',
-                    price: '$36.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 8900,
-                    description: 'Cold-pressed antioxidants rich cleanser',
-                    ingredients: ['Kale', 'Spinach', 'Green Tea', 'Vitamins'],
-                    features: ['Vegan', 'Cruelty-Free', 'Cold-Pressed'],
-                    skinConcerns: ['Combination Skin', 'Antioxidant Protection', 'Gentle Cleansing'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'combo-premium-2',
-                    name: 'Tatcha The Water Cream',
-                    brand: 'Tatcha',
-                    price: '$68.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 3400,
-                    description: 'Oil-free anti-aging water cream',
-                    ingredients: ['Japanese Wild Rose', 'Hadasei-3 Complex', 'Tatcha\'s Signature'],
-                    features: ['Oil-Free', 'Non-Comedogenic', 'Anti-Aging'],
-                    skinConcerns: ['Combination Skin', 'Pore Refining', 'Anti-Aging'],
-                    usage: 'Use morning and evening'
-                }
-            ],
-            scienceExplanations: [
-                { title: "Zone-Based Skincare Science", content: "Combination skin requires different approaches for different facial zones. The T-zone has more sebaceous glands per square inch than other facial areas, requiring oil control, while cheeks need hydration support." },
-                { title: "Niacinamide: The Balancing Act", content: "Niacinamide helps regulate sebum production in oily areas while strengthening the skin barrier in dry areas. It's particularly effective for combination skin as it addresses multiple concerns simultaneously." }
-            ]
-        },
-        'Normal Skin': {
-            description: 'Products to maintain balance and provide preventive care',
-            concerns: ['Maintenance', 'Prevention', 'Environmental Protection', 'Healthy Glow'],
-            keyIngredients: ['Vitamin C', 'Peptides', 'Antioxidants', 'Hyaluronic Acid'],
-            morningRoutine: [
-                { step: 1, product: 'Gentle Cleanser', type: 'Cleanser', purpose: 'Refresh skin and remove overnight impurities', application: 'Gentle circular motions, rinse with lukewarm water', timing: 'Daily' },
-                { step: 2, product: 'Vitamin C Serum', type: 'Antioxidant', purpose: 'Protect against environmental damage', application: 'Apply to clean, dry skin', timing: 'Daily' },
-                { step: 3, product: 'Light Moisturizer', type: 'Moisturizer', purpose: 'Maintain hydration balance', application: 'Pea-sized amount, massage gently', timing: 'Daily' },
-                { step: 4, product: 'Broad Spectrum Sunscreen', type: 'Sun Protection', purpose: 'Prevent premature aging and damage', application: 'Apply 15 minutes before sun exposure', timing: 'Daily' }
-            ],
-            eveningRoutine: [
-                { step: 1, product: 'Cleansing Balm/Gel', type: 'Cleanser', purpose: 'Remove makeup, sunscreen, and daily buildup', application: 'Massage thoroughly, especially on sunscreen areas', timing: 'Daily' },
-                { step: 2, product: 'Treatment Serum', type: 'Treatment', purpose: 'Address specific concerns (anti-aging, texture)', application: 'Allow to absorb completely', timing: '3-4 times weekly' },
-                { step: 3, product: 'Hydrating Serum', type: 'Hydration', purpose: 'Maintain optimal moisture levels', application: 'Apply while skin is still slightly damp', timing: 'Daily' },
-                { step: 4, product: 'Night Moisturizer', type: 'Moisturizer', purpose: 'Support overnight skin repair', application: 'Generous amount, allow to absorb', timing: 'Daily' }
-            ],
-            products: [
-                {
-                    id: 'normal-budget-1',
-                    name: 'Vanicream Gentle Facial Cleanser',
-                    brand: 'Vanicream',
-                    price: '$8.99',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 12300,
-                    description: 'Gentle cleanser for sensitive normal skin',
-                    ingredients: ['Glycerin', 'Purified Water', 'Cocoyl Glycinate'],
-                    features: ['Fragrance-Free', 'Soap-Free', 'Dermatologist Recommended'],
-                    skinConcerns: ['Gentle Cleansing', 'Sensitive Skin', 'Daily Use'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'normal-budget-2',
-                    name: 'The Ordinary Vitamin C Suspension 23%',
-                    brand: 'The Ordinary',
-                    price: '$5.80',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.3,
-                    reviews: 28900,
-                    description: 'Direct vitamin C for brightening',
-                    ingredients: ['Vitamin C 23%', 'Hyaluronic Acid', 'Silicone'],
-                    features: ['Vegan', 'Cruelty-Free', 'Direct Vitamin C'],
-                    skinConcerns: ['Brightening', 'Anti-Aging', 'Antioxidant Protection'],
-                    usage: 'Use in morning, can be mixed with moisturizer'
-                },
-                {
-                    id: 'normal-premium-1',
-                    name: 'SkinCeuticals C E Ferulic',
-                    brand: 'SkinCeuticals',
-                    price: '$169.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.8,
-                    reviews: 4200,
-                    description: 'Advanced antioxidant vitamin C serum',
-                    ingredients: ['Vitamin C 15%', 'Vitamin E', 'Ferulic Acid'],
-                    features: ['Clinical Results', 'Patented Formula', 'Dermatologist Developed'],
-                    skinConcerns: ['Anti-Aging', 'Environmental Protection', 'Brightening'],
-                    usage: 'Use 4-5 drops in morning after cleansing'
-                },
-                {
-                    id: 'normal-premium-2',
-                    name: 'Drunk Elephant Protini Polypeptide Cream',
-                    brand: 'Drunk Elephant',
-                    price: '$68.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 7800,
-                    description: 'Protein moisturizer with peptides and amino acids',
-                    ingredients: ['Signal Peptides', 'Growth Factors', 'Amino Acids', 'Pygmy Waterlily'],
-                    features: ['Vegan', 'Cruelty-Free', 'Silicone-Free'],
-                    skinConcerns: ['Firmness', 'Elasticity', 'Protein Support'],
-                    usage: 'Use morning and evening'
-                }
-            ],
-            scienceExplanations: [
-                { title: "Preventive Skincare Science", content: "Normal skin is the ideal baseline - balanced oil production, adequate hydration, and minimal concerns. The focus should be on prevention rather than treatment, using antioxidants to protect against environmental damage." },
-                { title: "Vitamin C: The Master Antioxidant", content: "Vitamin C neutralizes free radicals from UV exposure and pollution, stimulates collagen production, and inhibits melanin synthesis. It's essential for preventing premature aging in normal skin." }
-            ]
-        },
-        'Sensitive Skin': {
-            description: 'Gentle products to calm, soothe, and strengthen sensitive skin',
-            concerns: ['Redness', 'Irritation', 'Reactivity', 'Barrier Weakness', 'Stinging'],
-            keyIngredients: ['Centella Asiatica', 'Ceramides', 'Niacinamide', 'Oat Extract', 'Aloe Vera'],
-            morningRoutine: [
-                { step: 1, product: 'Ultra-Gentle Cleanser', type: 'Cleanser', purpose: 'Cleanse without disrupting skin barrier', application: '10-second contact time maximum', timing: 'Daily' },
-                { step: 2, product: 'Calming Toner/Essence', type: 'Soother', purpose: 'Reduce redness and prepare skin', application: 'Pat gently with hands, no rubbing', timing: 'Daily' },
-                { step: 3, product: 'Barrier Repair Serum', type: 'Treatment', purpose: 'Strengthen skin barrier', application: 'Apply to slightly damp skin', timing: 'Daily' },
-                { step: 4, product: 'Gentle Moisturizer', type: 'Moisturizer', purpose: 'Provide protection and hydration', application: 'Gentle pressing motion', timing: 'Daily' },
-                { step: 5, product: 'Mineral Sunscreen', type: 'Sun Protection', purpose: 'Physical protection without irritation', application: 'Pat gently, avoid rubbing', timing: 'Daily' }
-            ],
-            eveningRoutine: [
-                { step: 1, product: 'Micellar Water/Cleansing Milk', type: 'Cleanser', purpose: 'Remove makeup and impurities gently', application: 'Soak cotton pad, gentle swipes', timing: 'Daily' },
-                { step: 2, product: 'Gentle Cream Cleanser', type: 'Cleanser', purpose: 'Second cleanse without stripping', application: 'Minimal contact time, cool water', timing: 'Daily' },
-                { step: 3, product: 'Calming Treatment', type: 'Treatment', purpose: 'Reduce inflammation and redness', application: 'Wait for skin to calm between steps', timing: 'Daily' },
-                { step: 4, product: 'Rich Moisturizer', type: 'Moisturizer', purpose: 'Intensive barrier support', application: 'Generous amount, gentle application', timing: 'Daily' },
-                { step: 5, product: 'Facial Oil (Optional)', type: 'Occlusive', purpose: 'Extra barrier protection', application: '2-3 drops, press gently', timing: 'As needed' }
-            ],
-            products: [
-                {
-                    id: 'sensitive-budget-1',
-                    name: 'Avene Tolerance Control Cleanser',
-                    brand: 'Avene',
-                    price: '$32.00',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 8900,
-                    description: 'Ultra-gentle cleanser for reactive skin',
-                    ingredients: ['Thermal Spring Water', 'Dexpanthanol', 'Ceramides'],
-                    features: ['Sterile Formula', 'Fragrance-Free', 'Paraben-Free'],
-                    skinConcerns: ['Sensitivity', 'Redness', 'Barrier Repair'],
-                    usage: 'Use morning and evening, minimal contact time'
-                },
-                {
-                    id: 'sensitive-budget-2',
-                    name: 'La Roche-Posay Toleriane Sensitive Fluide',
-                    brand: 'La Roche-Posay',
-                    price: '$24.99',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.4,
-                    reviews: 12300,
-                    description: 'Minimalist formula for sensitive skin',
-                    ingredients: ['Thermal Spring Water', 'Glycerin', 'Squalane'],
-                    features: ['Minimal Ingredients', 'Fragrance-Free', 'Non-Comedogenic'],
-                    skinConcerns: ['Sensitivity', 'Basic Hydration', 'Minimal Irritation'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'sensitive-premium-1',
-                    name: 'Drunk Elephant Lala Retro Whipped Cream',
-                    brand: 'Drunk Elephant',
-                    price: '$60.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 5600,
-                    description: 'Whipped moisturizer with African oils',
-                    ingredients: ['African Oils', 'Ceramides', 'Hyaluronic Acid'],
-                    features: ['Cruelty-Free', 'Fragrance-Free', 'Silicone-Free'],
-                    skinConcerns: ['Barrier Repair', 'Intensive Moisture', 'Gentle Care'],
-                    usage: 'Use as needed for intensive moisture'
-                },
-                {
-                    id: 'sensitive-premium-2',
-                    name: 'Tatcha The Indigo Cream',
-                    brand: 'Tatcha',
-                    price: '$85.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.7,
-                    reviews: 2100,
-                    description: 'Anti-redness cream with indigo extract',
-                    ingredients: ['Japanese Indigo', 'Hadasei-3 Complex', 'Colloidal Oatmeal'],
-                    features: ['Natural Ingredients', 'Anti-Redness', 'Luxury Formula'],
-                    skinConcerns: ['Redness', 'Sensitivity', 'Luxury Care'],
-                    usage: 'Use morning and evening'
-                }
-            ],
-            scienceExplanations: [
-                { title: "Understanding Skin Reactivity", content: "Sensitive skin has a compromised barrier function and heightened nerve responses. The stratum corneum is thinner, allowing irritants to penetrate more easily and trigger inflammatory responses." },
-                { title: "The Importance of pH Balance", content: "Sensitive skin often has an altered pH level. Healthy skin pH is around 4.7-5.5. Using pH-balanced products helps maintain the acid mantle, which protects against pathogens and irritation." }
-            ]
-        }
-    };
-
-    /* =========================================================
-       DATA PERSISTENCE HELPERS
-    ========================================================== */
-    function getUserData() {
-        if (!currentUser) return null;
-        const raw = localStorage.getItem(`data_${currentUser.email}`);
-        return raw ? JSON.parse(raw) : { analyses: [], savedProducts: [], photos: [] };
-    }
-
-    function saveUserData(data) {
-        if (!currentUser) return;
-        localStorage.setItem(`data_${currentUser.email}`, JSON.stringify(data));
-    }
-
-    function saveAnalysis() {
-        if (!currentUser) return;
-        const data = getUserData();
-        data.analyses.push({
-            date: new Date().toISOString(),
-            skinType: currentSkinType,
-            concerns: skinAnalysis.concerns,
-            confidence: skinAnalysis.confidence
-        });
-        saveUserData(data);
-        
-        // Also update user object
-        currentUser.analyses = data.analyses;
-        localStorage.setItem('skincastUser', JSON.stringify(currentUser));
-    }
-
-    function addToRoutine(productId) {
-        if (!currentUser) {
-            showNotification('Please login to save products', 'warning');
-            return;
-        }
-        const data = getUserData();
-        if (data.savedProducts.includes(productId)) {
-            showNotification('Product already in your routine', 'info');
-            return;
-        }
-        data.savedProducts.push(productId);
-        saveUserData(data);
-        
-        // Update user object
-        currentUser.savedProducts = data.savedProducts;
-        localStorage.setItem('skincastUser', JSON.stringify(currentUser));
-        
-        // Update button
-        const btn = event.target;
-        btn.innerHTML = '<i class="fas fa-check mr-2"></i>Saved';
-        btn.classList.remove('bg-gradient-to-r', 'from-purple-500', 'to-blue-500');
-        btn.classList.add('bg-green-500');
-        
-        showNotification('Product added to your routine!', 'success');
-    }
-
-    /* =========================================================
-       CAMERA & SCAN ANIMATION
-    ========================================================== */
-    async function: 'Balancing Moisturizer', type: 'Moisturizer', purpose: 'Hydrate without clogging', application: 'More on dry areas, less on oily areas', timing: 'Daily' }
-            ],
-            products: [
-                {
-                    id: 'combo-budget-1',
-                    name: 'Cetaphil Daily Facial Cleanser',
-                    brand: 'Cetaphil',
-                    price: '$11.99',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.4,
-                    reviews: 18200,
-                    description: 'Gentle cleanser for combination skin',
-                    ingredients: ['Glycerin', 'Niacinamide', 'Panthenol'],
-                    features: ['Soap-Free', 'Non-Comedogenic', 'Dermatologist Recommended'],
-                    skinConcerns: ['Combination Skin', 'Gentle Cleansing', 'pH Balance'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'combo-budget-2',
-                    name: 'The Ordinary Niacinamide 10% + Zinc 1%',
-                    brand: 'The Ordinary',
-                    price: '$6.80',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 45800,
-                    description: 'Oil control and pore minimizing serum',
-                    ingredients: ['Niacinamide 10%', 'Zinc PCA 1%'],
-                    features: ['Vegan', 'Oil-Free', 'Fragrance-Free'],
-                    skinConcerns: ['Oil Control', 'Pore Minimizing', 'Breakout Prevention'],
-                    usage: 'Use after cleansing, focus on T-zone'
-                },
-                {
-                    id: 'combo-premium-1',
-                    name: 'Youth to the People Superfood Cleanser',
-                    brand: 'Youth to the People',
-                    price: '$36.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 8900,
-                    description: 'Cold-pressed antioxidants rich cleanser',
-                    ingredients: ['Kale', 'Spinach', 'Green Tea', 'Vitamins'],
-                    features: ['Vegan', 'Cruelty-Free', 'Cold-Pressed'],
-                    skinConcerns: ['Combination Skin', 'Antioxidant Protection', 'Gentle Cleansing'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'combo-premium-2',
-                    name: 'Tatcha The Water Cream',
-                    brand: 'Tatcha',
-                    price: '$68.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 3400,
-                    description: 'Oil-free anti-aging water cream',
-                    ingredients: ['Japanese Wild Rose', 'Hadasei-3 Complex', 'Tatcha\'s Signature'],
-                    features: ['Oil-Free', 'Non-Comedogenic', 'Anti-Aging'],
-                    skinConcerns: ['Combination Skin', 'Pore Refining', 'Anti-Aging'],
-                    usage: 'Use morning and evening'
-                }
-            ],
-            scienceExplanations: [
-                { title: "Zone-Based Skincare Science", content: "Combination skin requires different approaches for different facial zones. The T-zone has more sebaceous glands per square inch than other facial areas, requiring oil control, while cheeks need hydration support." },
-                { title: "Niacinamide: The Balancing Act", content: "Niacinamide helps regulate sebum production in oily areas while strengthening the skin barrier in dry areas. It's particularly effective for combination skin as it addresses multiple concerns simultaneously." }
-            ]
-        },
-        'Normal Skin': {
-            description: 'Products to maintain balance and provide preventive care',
-            concerns: ['Maintenance', 'Prevention', 'Environmental Protection', 'Healthy Glow'],
-            keyIngredients: ['Vitamin C', 'Peptides', 'Antioxidants', 'Hyaluronic Acid'],
-            morningRoutine: [
-                { step: 1, product: 'Gentle Cleanser', type: 'Cleanser', purpose: 'Refresh skin and remove overnight impurities', application: 'Gentle circular motions, rinse with lukewarm water', timing: 'Daily' },
-                { step: 2, product: 'Vitamin C Serum', type: 'Antioxidant', purpose: 'Protect against environmental damage', application: 'Apply to clean, dry skin', timing: 'Daily' },
-                { step: 3, product: 'Light Moisturizer', type: 'Moisturizer', purpose: 'Maintain hydration balance', application: 'Pea-sized amount, massage gently', timing: 'Daily' },
-                { step: 4, product: 'Broad Spectrum Sunscreen', type: 'Sun Protection', purpose: 'Prevent premature aging and damage', application: 'Apply 15 minutes before sun exposure', timing: 'Daily' }
-            ],
-            eveningRoutine: [
-                { step: 1, product: 'Cleansing Balm/Gel', type: 'Cleanser', purpose: 'Remove makeup, sunscreen, and daily buildup', application: 'Massage thoroughly, especially on sunscreen areas', timing: 'Daily' },
-                { step: 2, product: 'Treatment Serum', type: 'Treatment', purpose: 'Address specific concerns (anti-aging, texture)', application: 'Allow to absorb completely', timing: '3-4 times weekly' },
-                { step: 3, product: 'Hydrating Serum', type: 'Hydration', purpose: 'Maintain optimal moisture levels', application: 'Apply while skin is still slightly damp', timing: 'Daily' },
-                { step: 4, product: 'Night Moisturizer', type: 'Moisturizer', purpose: 'Support overnight skin repair', application: 'Generous amount, allow to absorb', timing: 'Daily' }
-            ],
-            products: [
-                {
-                    id: 'normal-budget-1',
-                    name: 'Vanicream Gentle Facial Cleanser',
-                    brand: 'Vanicream',
-                    price: '$8.99',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 12300,
-                    description: 'Gentle cleanser for sensitive normal skin',
-                    ingredients: ['Glycerin', 'Purified Water', 'Cocoyl Glycinate'],
-                    features: ['Fragrance-Free', 'Soap-Free', 'Dermatologist Recommended'],
-                    skinConcerns: ['Gentle Cleansing', 'Sensitive Skin', 'Daily Use'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'normal-budget-2',
-                    name: 'The Ordinary Vitamin C Suspension 23%',
-                    brand: 'The Ordinary',
-                    price: '$5.80',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.3,
-                    reviews: 28900,
-                    description: 'Direct vitamin C for brightening',
-                    ingredients: ['Vitamin C 23%', 'Hyaluronic Acid', 'Silicone'],
-                    features: ['Vegan', 'Cruelty-Free', 'Direct Vitamin C'],
-                    skinConcerns: ['Brightening', 'Anti-Aging', 'Antioxidant Protection'],
-                    usage: 'Use in morning, can be mixed with moisturizer'
-                },
-                {
-                    id: 'normal-premium-1',
-                    name: 'SkinCeuticals C E Ferulic',
-                    brand: 'SkinCeuticals',
-                    price: '$169.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.8,
-                    reviews: 4200,
-                    description: 'Advanced antioxidant vitamin C serum',
-                    ingredients: ['Vitamin C 15%', 'Vitamin E', 'Ferulic Acid'],
-                    features: ['Clinical Results', 'Patented Formula', 'Dermatologist Developed'],
-                    skinConcerns: ['Anti-Aging', 'Environmental Protection', 'Brightening'],
-                    usage: 'Use 4-5 drops in morning after cleansing'
-                },
-                {
-                    id: 'normal-premium-2',
-                    name: 'Drunk Elephant Protini Polypeptide Cream',
-                    brand: 'Drunk Elephant',
-                    price: '$68.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 7800,
-                    description: 'Protein moisturizer with peptides and amino acids',
-                    ingredients: ['Signal Peptides', 'Growth Factors', 'Amino Acids', 'Pygmy Waterlily'],
-                    features: ['Vegan', 'Cruelty-Free', 'Silicone-Free'],
-                    skinConcerns: ['Firmness', 'Elasticity', 'Protein Support'],
-                    usage: 'Use morning and evening'
-                }
-            ],
-            scienceExplanations: [
-                { title: "Preventive Skincare Science", content: "Normal skin is the ideal baseline - balanced oil production, adequate hydration, and minimal concerns. The focus should be on prevention rather than treatment, using antioxidants to protect against environmental damage." },
-                { title: "Vitamin C: The Master Antioxidant", content: "Vitamin C neutralizes free radicals from UV exposure and pollution, stimulates collagen production, and inhibits melanin synthesis. It's essential for preventing premature aging in normal skin." }
-            ]
-        },
-        'Sensitive Skin': {
-            description: 'Gentle products to calm, soothe, and strengthen sensitive skin',
-            concerns: ['Redness', 'Irritation', 'Reactivity', 'Barrier Weakness', 'Stinging'],
-            keyIngredients: ['Centella Asiatica', 'Ceramides', 'Niacinamide', 'Oat Extract', 'Aloe Vera'],
-            morningRoutine: [
-                { step: 1, product: 'Ultra-Gentle Cleanser', type: 'Cleanser', purpose: 'Cleanse without disrupting skin barrier', application: '10-second contact time maximum', timing: 'Daily' },
-                { step: 2, product: 'Calming Toner/Essence', type: 'Soother', purpose: 'Reduce redness and prepare skin', application: 'Pat gently with hands, no rubbing', timing: 'Daily' },
-                { step: 3, product: 'Barrier Repair Serum', type: 'Treatment', purpose: 'Strengthen skin barrier', application: 'Apply to slightly damp skin', timing: 'Daily' },
-                { step: 4, product: 'Gentle Moisturizer', type: 'Moisturizer', purpose: 'Provide protection and hydration', application: 'Gentle pressing motion', timing: 'Daily' },
-                { step: 5, product: 'Mineral Sunscreen', type: 'Sun Protection', purpose: 'Physical protection without irritation', application: 'Pat gently, avoid rubbing', timing: 'Daily' }
-            ],
-            eveningRoutine: [
-                { step: 1, product: 'Micellar Water/Cleansing Milk', type: 'Cleanser', purpose: 'Remove makeup and impurities gently', application: 'Soak cotton pad, gentle swipes', timing: 'Daily' },
-                { step: 2, product: 'Gentle Cream Cleanser', type: 'Cleanser', purpose: 'Second cleanse without stripping', application: 'Minimal contact time, cool water', timing: 'Daily' },
-                { step: 3, product: 'Calming Treatment', type: 'Treatment', purpose: 'Reduce inflammation and redness', application: 'Wait for skin to calm between steps', timing: 'Daily' },
-                { step: 4, product: 'Rich Moisturizer', type: 'Moisturizer', purpose: 'Intensive barrier support', application: 'Generous amount, gentle application', timing: 'Daily' },
-                { step: 5, product: 'Facial Oil (Optional)', type: 'Occlusive', purpose: 'Extra barrier protection', application: '2-3 drops, press gently', timing: 'As needed' }
-            ],
-            products: [
-                {
-                    id: 'sensitive-budget-1',
-                    name: 'Avene Tolerance Control Cleanser',
-                    brand: 'Avene',
-                    price: '$32.00',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 8900,
-                    description: 'Ultra-gentle cleanser for reactive skin',
-                    ingredients: ['Thermal Spring Water', 'Dexpanthanol', 'Ceramides'],
-                    features: ['Sterile Formula', 'Fragrance-Free', 'Paraben-Free'],
-                    skinConcerns: ['Sensitivity', 'Redness', 'Barrier Repair'],
-                    usage: 'Use morning and evening, minimal contact time'
-                },
-                {
-                    id: 'sensitive-budget-2',
-                    name: 'La Roche-Posay Toleriane Sensitive Fluide',
-                    brand: 'La Roche-Posay',
-                    price: '$24.99',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.4,
-                    reviews: 12300,
-                    description: 'Minimalist formula for sensitive skin',
-                    ingredients: ['Thermal Spring Water', 'Glycerin', 'Squalane'],
-                    features: ['Minimal Ingredients', 'Fragrance-Free', 'Non-Comedogenic'],
-                    skinConcerns: ['Sensitivity', 'Basic Hydration', 'Minimal Irritation'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'sensitive-premium-1',
-                    name: 'Drunk Elephant Lala Retro Whipped Cream',
-                    brand: 'Drunk Elephant',
-                    price: '$60.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 5600,
-                    description: 'Whipped moisturizer with African oils',
-                    ingredients: ['African Oils', 'Ceramides', 'Hyaluronic Acid'],
-                    features: ['Cruelty-Free', 'Fragrance-Free', 'Silicone-Free'],
-                    skinConcerns: ['Barrier Repair', 'Intensive Moisture', 'Gentle Care'],
-                    usage: 'Use as needed for intensive moisture'
-                },
-                {
-                    id: 'sensitive-premium-2',
-                    name: 'Tatcha The Indigo Cream',
-                    brand: 'Tatcha',
-                    price: '$85.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.7,
-                    reviews: 2100,
-                    description: 'Anti-redness cream with indigo extract',
-                    ingredients: ['Japanese Indigo', 'Hadasei-3 Complex', 'Colloidal Oatmeal'],
-                    features: ['Natural Ingredients', 'Anti-Redness', 'Luxury Formula'],
-                    skinConcerns: ['Redness', 'Sensitivity', 'Luxury Care'],
-                    usage: 'Use morning and evening'
-                }
-            ],
-            scienceExplanations: [
-                { title: "Understanding Skin Reactivity", content: "Sensitive skin has a compromised barrier function and heightened nerve responses. The stratum corneum is thinner, allowing irritants to penetrate more easily and trigger inflammatory responses." },
-                { title: "The Importance of pH Balance", content: "Sensitive skin often has an altered pH level. Healthy skin pH is around 4.7-5.5. Using pH-balanced products helps maintain the acid mantle, which protects against pathogens and irritation." }
-            ]
-        }
-    };
-
-    /* =========================================================
-       DATA PERSISTENCE HELPERS
-    ========================================================== */
-    function getUserData() {
-        if (!currentUser) return null;
-        const raw = localStorage.getItem(`data_${currentUser.email}`);
-        return raw ? JSON.parse(raw) : { analyses: [], savedProducts: [], photos: [] };
-    }
-
-    function saveUserData(data) {
-        if (!currentUser) return;
-        localStorage.setItem(`data_${currentUser.email}`, JSON.stringify(data));
-    }
-
-    function saveAnalysis() {
-        if (!currentUser) return;
-        const data = getUserData();
-        data.analyses.push({
-            date: new Date().toISOString(),
-            skinType: currentSkinType,
-            concerns: skinAnalysis.concerns,
-            confidence: skinAnalysis.confidence
-        });
-        saveUserData(data);
-        
-        // Also update user object
-        currentUser.analyses = data.analyses;
-        localStorage.setItem('skincastUser', JSON.stringify(currentUser));
-    }
-
-    function addToRoutine(productId) {
-        if (!currentUser) {
-            showNotification('Please login to save products', 'warning');
-            return;
-        }
-        const data = getUserData();
-        if (data.savedProducts.includes(productId)) {
-            showNotification('Product already in your routine', 'info');
-            return;
-        }
-        data.savedProducts.push(productId);
-        saveUserData(data);
-        
-        // Update user object
-        currentUser.savedProducts = data.savedProducts;
-        localStorage.setItem('skincastUser', JSON.stringify(currentUser));
-        
-        // Update button
-        const btn = event.target;
-        btn.innerHTML = '<i class="fas fa-check mr-2"></i>Saved';
-        btn.classList.remove('bg-gradient-to-r', 'from-purple-500', 'to-blue-500');
-        btn.classList.add('bg-green-500');
-        
-        showNotification('Product added to your routine!', 'success');
-    }
-
-    /* =========================================================
-       CAMERA & SCAN ANIMATION
-    ========================================================== */
-    async function: 'Balancing Moisturizer', type: 'Moisturizer', purpose: 'Hydrate without clogging', application: 'More on dry areas, less on oily areas', timing: 'Daily' }
-            ],
-            products: [
-                {
-                    id: 'combo-budget-1',
-                    name: 'Cetaphil Daily Facial Cleanser',
-                    brand: 'Cetaphil',
-                    price: '$11.99',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.4,
-                    reviews: 18200,
-                    description: 'Gentle cleanser for combination skin',
-                    ingredients: ['Glycerin', 'Niacinamide', 'Panthenol'],
-                    features: ['Soap-Free', 'Non-Comedogenic', 'Dermatologist Recommended'],
-                    skinConcerns: ['Combination Skin', 'Gentle Cleansing', 'pH Balance'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'combo-budget-2',
-                    name: 'The Ordinary Niacinamide 10% + Zinc 1%',
-                    brand: 'The Ordinary',
-                    price: '$6.80',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 45800,
-                    description: 'Oil control and pore minimizing serum',
-                    ingredients: ['Niacinamide 10%', 'Zinc PCA 1%'],
-                    features: ['Vegan', 'Oil-Free', 'Fragrance-Free'],
-                    skinConcerns: ['Oil Control', 'Pore Minimizing', 'Breakout Prevention'],
-                    usage: 'Use after cleansing, focus on T-zone'
-                },
-                {
-                    id: 'combo-premium-1',
-                    name: 'Youth to the People Superfood Cleanser',
-                    brand: 'Youth to the People',
-                    price: '$36.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 8900,
-                    description: 'Cold-pressed antioxidants rich cleanser',
-                    ingredients: ['Kale', 'Spinach', 'Green Tea', 'Vitamins'],
-                    features: ['Vegan', 'Cruelty-Free', 'Cold-Pressed'],
-                    skinConcerns: ['Combination Skin', 'Antioxidant Protection', 'Gentle Cleansing'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'combo-premium-2',
-                    name: 'Tatcha The Water Cream',
-                    brand: 'Tatcha',
-                    price: '$68.00',
-                    budget: 'premium',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.5,
-                    reviews: 3400,
-                    description: 'Oil-free anti-aging water cream',
-                    ingredients: ['Japanese Wild Rose', 'Hadasei-3 Complex', 'Tatcha\'s Signature'],
-                    features: ['Oil-Free', 'Non-Comedogenic', 'Anti-Aging'],
-                    skinConcerns: ['Combination Skin', 'Pore Refining', 'Anti-Aging'],
-                    usage: 'Use morning and evening'
-                }
-            ],
-            scienceExplanations: [
-                { title: "Zone-Based Skincare Science", content: "Combination skin requires different approaches for different facial zones. The T-zone has more sebaceous glands per square inch than other facial areas, requiring oil control, while cheeks need hydration support." },
-                { title: "Niacinamide: The Balancing Act", content: "Niacinamide helps regulate sebum production in oily areas while strengthening the skin barrier in dry areas. It's particularly effective for combination skin as it addresses multiple concerns simultaneously." }
-            ]
-        },
-        'Normal Skin': {
-            description: 'Products to maintain balance and provide preventive care',
-            concerns: ['Maintenance', 'Prevention', 'Environmental Protection', 'Healthy Glow'],
-            keyIngredients: ['Vitamin C', 'Peptides', 'Antioxidants', 'Hyaluronic Acid'],
-            morningRoutine: [
-                { step: 1, product: 'Gentle Cleanser', type: 'Cleanser', purpose: 'Refresh skin and remove overnight impurities', application: 'Gentle circular motions, rinse with lukewarm water', timing: 'Daily' },
-                { step: 2, product: 'Vitamin C Serum', type: 'Antioxidant', purpose: 'Protect against environmental damage', application: 'Apply to clean, dry skin', timing: 'Daily' },
-                { step: 3, product: 'Light Moisturizer', type: 'Moisturizer', purpose: 'Maintain hydration balance', application: 'Pea-sized amount, massage gently', timing: 'Daily' },
-                { step: 4, product: 'Broad Spectrum Sunscreen', type: 'Sun Protection', purpose: 'Prevent premature aging and damage', application: 'Apply 15 minutes before sun exposure', timing: 'Daily' }
-            ],
-            eveningRoutine: [
-                { step: 1, product: 'Cleansing Balm/Gel', type: 'Cleanser', purpose: 'Remove makeup, sunscreen, and daily buildup', application: 'Massage thoroughly, especially on sunscreen areas', timing: 'Daily' },
-                { step: 2, product: 'Treatment Serum', type: 'Treatment', purpose: 'Address specific concerns (anti-aging, texture)', application: 'Allow to absorb completely', timing: '3-4 times weekly' },
-                { step: 3, product: 'Hydrating Serum', type: 'Hydration', purpose: 'Maintain optimal moisture levels', application: 'Apply while skin is still slightly damp', timing: 'Daily' },
-                { step: 4, product: 'Night Moisturizer', type: 'Moisturizer', purpose: 'Support overnight skin repair', application: 'Generous amount, allow to absorb', timing: 'Daily' }
-            ],
-            products: [
-                {
-                    id: 'normal-budget-1',
-                    name: 'Vanicream Gentle Facial Cleanser',
-                    brand: 'Vanicream',
-                    price: '$8.99',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.6,
-                    reviews: 12300,
-                    description: 'Gentle cleanser for sensitive normal skin',
-                    ingredients: ['Glycerin', 'Purified Water', 'Cocoyl Glycinate'],
-                    features: ['Fragrance-Free', 'Soap-Free', 'Dermatologist Recommended'],
-                    skinConcerns: ['Gentle Cleansing', 'Sensitive Skin', 'Daily Use'],
-                    usage: 'Use morning and evening'
-                },
-                {
-                    id: 'normal-budget-2',
-                    name: 'The Ordinary Vitamin C Suspension 23%',
-                    brand: 'The Ordinary',
-                    price: '$5.80',
-                    budget: 'affordable',
-                    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-                    rating: 4.3,
-                    reviews: 28900,
-                    description:
-                    'Direct vitamin C for brightening',
-ingredients: ['Vitamin C 23%', 'Hyaluronic Acid', 'Silicone'],
-features: ['Vegan', 'Cruelty-Free', 'Direct Vitamin C'],
-skinConcerns: ['Brightening', 'Anti-Aging', 'Antioxidant Protection'],
-usage: 'Use in morning, can be mixed with moisturizer'
-},
-{
-id: 'normal-premium-1',
-name: 'SkinCeuticals C E Ferulic',
-brand: 'SkinCeuticals',
-price: '$169.00',
-budget: 'premium',
-image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-rating: 4.8,
-reviews: 4200,
-description: 'Advanced antioxidant vitamin C serum',
-ingredients: ['Vitamin C 15%', 'Vitamin E', 'Ferulic Acid'],
-features: ['Clinical Results', 'Patented Formula', 'Dermatologist Developed'],
-skinConcerns: ['Anti-Aging', 'Environmental Protection', 'Brightening'],
-usage: 'Use 4-5 drops in morning after cleansing'
-},
-{
-id: 'normal-premium-2',
-name: 'Drunk Elephant Protini Polypeptide Cream',
-brand: 'Drunk Elephant',
-price: '$68.00',
-budget: 'premium',
-image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-rating: 4.6,
-reviews: 7800,
-description: 'Protein moisturizer with peptides and amino acids',
-ingredients: ['Signal Peptides', 'Growth Factors', 'Amino Acids', 'Pygmy Waterlily'],
-features: ['Vegan', 'Cruelty-Free', 'Silicone-Free'],
-skinConcerns: ['Firmness', 'Elasticity', 'Protein Support'],
-usage: 'Use morning and evening'
-}
-],
-scienceExplanations: [
-{ title: "Preventive Skincare Science", content: "Normal skin is the ideal baseline - balanced oil production, adequate hydration, and minimal concerns. The focus should be on prevention rather than treatment, using antioxidants to protect against environmental damage." },
-{ title: "Vitamin C: The Master Antioxidant", content: "Vitamin C neutralizes free radicals from UV exposure and pollution, stimulates collagen production, and inhibits melanin synthesis. It's essential for preventing premature aging in normal skin." }
-]
-},
-'Sensitive Skin': {
-description: 'Gentle products to calm, soothe, and strengthen sensitive skin',
-concerns: ['Redness', 'Irritation', 'Reactivity', 'Barrier Weakness', 'Stinging'],
-keyIngredients: ['Centella Asiatica', 'Ceramides', 'Niacinamide', 'Oat Extract', 'Aloe Vera'],
-morningRoutine: [
-{ step: 1, product: 'Ultra-Gentle Cleanser', type: 'Cleanser', purpose: 'Cleanse without disrupting skin barrier', application: '10-second contact time maximum', timing: 'Daily' },
-{ step: 2, product: 'Calming Toner/Essence', type: 'Soother', purpose: 'Reduce redness and prepare skin', application: 'Pat gently with hands, no rubbing', timing: 'Daily' },
-{ step: 3, product: 'Barrier Repair Serum', type: 'Treatment', purpose: 'Strengthen skin barrier', application: 'Apply to slightly damp skin', timing: 'Daily' },
-{ step: 4, product: 'Gentle Moisturizer', type: 'Moisturizer', purpose: 'Provide protection and hydration', application: 'Gentle pressing motion', timing: 'Daily' },
-{ step: 5, product: 'Mineral Sunscreen', type: 'Sun Protection', purpose: 'Physical protection without irritation', application: 'Pat gently, avoid rubbing', timing: 'Daily' }
-],
-eveningRoutine: [
-{ step: 1, product: 'Micellar Water/Cleansing Milk', type: 'Cleanser', purpose: 'Remove makeup and impurities gently', application: 'Soak cotton pad, gentle swipes', timing: 'Daily' },
-{ step: 2, product: 'Gentle Cream Cleanser', type: 'Cleanser', purpose: 'Second cleanse without stripping', application: 'Minimal contact time, cool water', timing: 'Daily' },
-{ step: 3, product: 'Calming Treatment', type: 'Treatment', purpose: 'Reduce inflammation and redness', application: 'Wait for skin to calm between steps', timing: 'Daily' },
-{ step: 4, product: 'Rich Moisturizer', type: 'Moisturizer', purpose: 'Intensive barrier support', application: 'Generous amount, gentle application', timing: 'Daily' },
-{ step: 5, product: 'Facial Oil (Optional)', type: 'Occlusive', purpose: 'Extra barrier protection', application: '2-3 drops, press gently', timing: 'As needed' }
-],
-products: [
-{
-id: 'sensitive-budget-1',
-name: 'Avene Tolerance Control Cleanser',
-brand: 'Avene',
-price: '$32.00',
-budget: 'affordable',
-image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-rating: 4.5,
-reviews: 8900,
-description: 'Ultra-gentle cleanser for reactive skin',
-ingredients: ['Thermal Spring Water', 'Dexpanthanol', 'Ceramides'],
-features: ['Sterile Formula', 'Fragrance-Free', 'Paraben-Free'],
-skinConcerns: ['Sensitivity', 'Redness', 'Barrier Repair'],
-usage: 'Use morning and evening, minimal contact time'
-},
-{
-id: 'sensitive-budget-2',
-name: 'La Roche-Posay Toleriane Sensitive Fluide',
-brand: 'La Roche-Posay',
-price: '$24.99',
-budget: 'affordable',
-image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-rating: 4.4,
-reviews: 12300,
-description: 'Minimalist formula for sensitive skin',
-ingredients: ['Thermal Spring Water', 'Glycerin', 'Squalane'],
-features: ['Minimal Ingredients', 'Fragrance-Free', 'Non-Comedogenic'],
-skinConcerns: ['Sensitivity', 'Basic Hydration', 'Minimal Irritation'],
-usage: 'Use morning and evening'
-},
-{
-id: 'sensitive-premium-1',
-name: 'Drunk Elephant Lala Retro Whipped Cream',
-brand: 'Drunk Elephant',
-price: '$60.00',
-budget: 'premium',
-image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-rating: 4.5,
-reviews: 5600,
-description: 'Whipped moisturizer with African oils',
-ingredients: ['African Oils', 'Ceramides', 'Hyaluronic Acid'],
-features: ['Cruelty-Free', 'Fragrance-Free', 'Silicone-Free'],
-skinConcerns: ['Barrier Repair', 'Intensive Moisture', 'Gentle Care'],
-usage: 'Use as needed for intensive moisture'
-},
-{
-id: 'sensitive-premium-2',
-name: 'Tatcha The Indigo Cream',
-brand: 'Tatcha',
-price: '$85.00',
-budget: 'premium',
-image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',
-rating: 4.7,
-reviews: 2100,
-description: 'Anti-redness cream with indigo extract',
-ingredients: ['Japanese Indigo', 'Hadasei-3 Complex', 'Colloidal Oatmeal'],
-features: ['Natural Ingredients', 'Anti-Redness', 'Luxury Formula'],
-skinConcerns: ['Redness', 'Sensitivity', 'Luxury Care'],
-usage: 'Use morning and evening'
-}
-],
-scienceExplanations: [
-{ title: "Understanding Skin Reactivity", content: "Sensitive skin has a compromised barrier function and heightened nerve responses. The stratum corneum is thinner, allowing irritants to penetrate more easily and trigger inflammatory responses." },
-{ title: "The Importance of pH Balance", content: "Sensitive skin often has an altered pH level. Healthy skin pH is around 4.7-5.5. Using pH-balanced products helps maintain the acid mantle, which protects against pathogens and irritation." }
-]
-}
-};
-    /* =========================================================
-       DATA PERSISTENCE HELPERS
-    ========================================================== */
-    function getUserData() {
-        if (!currentUser) return null;
-        const raw = localStorage.getItem(`data_${currentUser.email}`);
-        return raw ? JSON.parse(raw) : { analyses: [], savedProducts: [], photos: [] };
-    }
-
-    function saveUserData(data) {
-        if (!currentUser) return;
-        localStorage.setItem(`data_${currentUser.email}`, JSON.stringify(data));
-    }
-
-    function saveAnalysis() {
-        if (!currentUser) return;
-        const data = getUserData();
-        data.analyses.push({
-            date: new Date().toISOString(),
-            skinType: currentSkinType,
-            concerns: skinAnalysis.concerns,
-            confidence: skinAnalysis.confidence
-        });
-        saveUserData(data);
-        
-        // Also update user object
-        currentUser.analyses = data.analyses;
-        localStorage.setItem('skincastUser', JSON.stringify(currentUser));
-    }
-
-    function addToRoutine(productId) {
-        if (!currentUser) {
-            showNotification('Please login to save products', 'warning');
-            return;
-        }
-        const data = getUserData();
-        if (data.savedProducts.includes(productId)) {
-            showNotification('Product already in your routine', 'info');
-            return;
-        }
-        data.savedProducts.push(productId);
-        saveUserData(data);
-        
-        // Update user object
-        currentUser.savedProducts = data.savedProducts;
-        localStorage.setItem('skincastUser', JSON.stringify(currentUser));
-        
-        // Update button
-        const btn = event.target;
-        btn.innerHTML = '<i class="fas fa-check mr-2"></i>Saved';
-        btn.classList.remove('bg-gradient-to-r', 'from-purple-500', 'to-blue-500');
-        btn.classList.add('bg-green-500');
-        
-        showNotification('Product added to your routine!', 'success');
-    }
-
-    /* =========================================================
-       CAMERA & SCAN ANIMATION
-    ========================================================== */
-    async function startCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { width: 640, height: 480, facingMode: 'user' } 
-            });
-            
-            const video = document.getElementById('webcam-video');
-            const placeholder = document.getElementById('camera-placeholder');
-            
-            video.srcObject = stream;
-            currentStream = stream;
-            
-            video.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-            
-            document.getElementById('startBtn').classList.add('hidden');
-            document.getElementById('stopBtn').classList.remove('hidden');
-            document.getElementById('realtimeBtn').disabled = false;
-            
-            isCameraOn = true;
-            
-            // Show scan animation
-            document.getElementById('scan-animation').classList.remove('hidden');
-            
-        } catch (error) {
-            console.error('Error accessing camera:', error);
-            showNotification('Camera access denied. Please allow camera access and try again.', 'error');
-        }
-    }
-
-    function stopCamera() {
-        if (currentStream) {
-            currentStream.getTracks().forEach(track => track.stop());
-        }
-        
-        const video = document.getElementById('webcam-video');
-        const placeholder = document.getElementById('camera-placeholder');
-        
-        video.classList.add('hidden');
-        placeholder.classList.remove('hidden');
-        
-        document.getElementById('startBtn').classList.remove('hidden');
-        document.getElementById('stopBtn').classList.add('hidden');
-        document.getElementById('realtimeBtn').disabled = true;
-        
-        isCameraOn = false;
-        
-        // Hide scan animation
-        document.getElementById('scan-animation').classList.add('hidden');
-        
-        if (predictionInterval) {
-            clearInterval(predictionInterval);
-            predictionInterval = null;
-        }
-    }
-
-    function startRealTimePrediction() {
-        if (!isCameraOn) {
-            showNotification('Please start camera first', 'warning');
-            return;
-        }
-        
-        showLoading();
-        
-        setTimeout(() => {
-            hideLoading();
-            const skinTypes = ['Acne-Prone Skin', 'Dry Skin', 'Combination Skin', 'Normal Skin', 'Sensitive Skin'];
-            const randomSkinType = skinTypes[Math.floor(Math.random() * skinTypes.length)];
-            
-            updatePredictionDisplay(randomSkinType);
-            
-        }, 2000);
-    }
-
-    function updatePredictionDisplay(skinType) {
-        const display = document.getElementById('prediction-display');
-        display.innerHTML = `
-            <div class="text-center">
-                <div class="text-2xl mb-2">🔍</div>
-                <h4 class="text-lg font-bold text-white mb-2">Detected: ${skinType}</h4>
-                <div class="text-sm text-white/80">Confidence: ${(85 + Math.random() * 10).toFixed(1)}%</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkinAI – Live Skin Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;overflow-x:hidden;margin:0;padding:0;}
+        .glass{background:rgba(255,255,255,.15);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.2);border-radius:20px;}
+        .glass-dark{background:rgba(0,0,0,.2);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:20px;}
+        .btn-primary{background:linear-gradient(135deg,#667eea,#764ba2);transition:all .3s ease;}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(102,126,234,.4);}
+        .scan-line{position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#667eea,transparent);box-shadow:0 0 20px #667eea;animation:scanMove 3s linear infinite;border-radius:2px;}
+        @keyframes scanMove{0%{top:0;opacity:0;}5%{opacity:1;}95%{opacity:1;}100%{top:100%;opacity:0;}}
+        .face-outline{position:absolute;top:50%;left:50%;width:260px;height:360px;border:3px solid rgba(255,255,255,.8);border-radius:130px 130px 180px 180px/160px 160px 200px 200px;transform:translate(-50%,-50%);pointer-events:none;}
+        .loading-spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        .notification{position:fixed;top:20px;right:20px;z-index:1000;transform:translateX(400px);transition:transform .3s ease;}
+        .notification.show{transform:translateX(0);}
+        .tab-button{position:relative;overflow:hidden;}
+        .tab-button.active::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:3px;background:#667eea;border-radius:2px;}
+        #webcam-video{width:100%;border-radius:20px;display:none;}
+        #camera-placeholder{border:2px dashed rgba(255,255,255,.3);border-radius:20px;}
+        .product-card{transition:all .3s ease;border:1px solid rgba(255,255,255,.2);}
+        .product-card:hover{transform:translateY(-5px);box-shadow:0 20px 40px rgba(0,0,0,.1);}
+        .budget-badge{position:absolute;top:10px;right:10px;padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600;z-index:10;}
+        .budget-affordable{background:#10b981;color:#fff;}
+        .budget-premium{background:#f59e0b;color:#fff;}
+    </style>
+</head>
+<body class="text-white">
+    <!-- NAV -->
+    <nav class="glass p-4 mb-8 sticky top-4 z-50 mx-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center"><i class="fas fa-brain text-white text-xl"></i></div>
+                <h1 class="text-2xl font-bold">SkinAI</h1>
             </div>
-        `;
-    }
+            <div class="flex space-x-3">
+                <button onclick="startNewAnalysis()" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition">New Analysis</button>
+                <button onclick="shareResults()" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition">Share</button>
+            </div>
+        </div>
+    </nav>
 
-    /* =========================================================
-       DEMO & RESULTS
-    ========================================================== */
-    function showDemoResults() {
-        showLoading();
-        
-        setTimeout(() => {
-            hideLoading();
-            
-            const skinTypes = ['Acne-Prone Skin', 'Dry Skin', 'Combination Skin', 'Normal Skin', 'Sensitive Skin'];
-            currentSkinType = skinTypes[Math.floor(Math.random() * skinTypes.length)];
-            
-            skinAnalysis = {
-                skinType: currentSkinType,
-                concerns: {
-                    'Hydration': Math.floor(Math.random() * 40) + 20,
-                    'Oil Control': Math.floor(Math.random() * 40) + 20,
-                    'Sensitivity': Math.floor(Math.random() * 40) + 20,
-                    'Anti-Aging': Math.floor(Math.random() * 40) + 20,
-                    'Pore Size': Math.floor(Math.random() * 40) + 20
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- HERO -->
+        <div class="text-center mb-12">
+            <div class="inline-block mb-6"><div class="w-20 h-20 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center"><i class="fas fa-microscope text-white text-3xl"></i></div></div>
+            <h2 class="text-5xl font-bold mb-4">AI-Powered Skin Analysis</h2>
+            <p class="text-xl text-white/80 max-w-2xl mx-auto">Real-time camera analysis + personalized skincare routine</p>
+        </div>
+
+        <!-- CAMERA -->
+        <div class="glass rounded-3xl p-8 mb-8">
+            <h3 class="text-2xl font-bold mb-6 text-center"><i class="fas fa-camera mr-3"></i>Real-Time Analysis</h3>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="relative overflow-hidden rounded-2xl bg-black/20" id="camera-container">
+                    <div id="camera-placeholder" class="p-8 text-center"><div class="text-6xl mb-4">📷</div><p class="text-white/80">Click "Start Camera"</p></div>
+                    <video id="webcam-video" autoplay playsinline muted class="hidden"></video>
+                    <canvas id="webcam-canvas" width="224" height="224" class="hidden"></canvas>
+                    <div id="scan-animation" class="hidden"><div class="face-outline"></div><div class="scan-line"></div></div>
+                </div>
+                <div class="space-y-4">
+                    <div id="prediction-display" class="glass p-4 text-center text-white/80">Start camera to see AI analysis</div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="startCamera()" id="startBtn" class="btn-primary px-4 py-3 rounded-xl font-semibold"><i class="fas fa-play mr-2"></i>Start Camera</button>
+                        <button onclick="stopCamera()" id="stopBtn" class="px-4 py-3 bg-red-500 hover:bg-red-600 rounded-xl font-semibold hidden"><i class="fas fa-stop mr-2"></i>Stop</button>
+                        <button onclick="startAIAnalysis()" id="aiBtn" class="col-span-2 px-4 py-3 bg-green-500 hover:bg-green-600 rounded-xl font-semibold disabled:opacity-50" disabled><i class="fas fa-brain mr-2"></i>Analyze Skin</button>
+                    </div>
+                    <button onclick="showDemoResults()" class="w-full px-4 py-3 bg-purple-500 hover:bg-purple-600 rounded-xl font-semibold"><i class="fas fa-rocket mr-2"></i>Try Demo</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS -->
+        <div id="results-section" class="hidden">
+            <div class="glass rounded-3xl p-8 mb-8">
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-check text-white text-2xl"></i></div>
+                    <h3 class="text-3xl font-bold mb-2">Analysis Complete!</h3>
+                    <p class="text-white/80">Your personalized skincare plan is ready</p>
+                </div>
+                <div id="skin-type-result" class="mb-6"></div>
+                <div class="bg-white/95 rounded-2xl p-6"><h4 class="text-xl font-bold text-gray-800 mb-4">Skin Concerns Breakdown</h4><div id="concerns-chart" class="h-64"></div></div>
+            </div>
+
+            <!-- TABS -->
+            <div class="glass rounded-2xl p-4 mb-8"><div class="flex flex-wrap gap-2 justify-center">
+                <button onclick="switchTab('products')" class="tab-button active px-6 py-3 text-white font-semibold rounded-xl" id="tab-products"><i class="fas fa-shopping-cart mr-2"></i>Products</button>
+                <button onclick="switchTab('routine')" class="tab-button px-6 py-3 text-white font-semibold rounded-xl" id="tab-routine"><i class="fas fa-clock mr-2"></i>Routine</button>
+                <button onclick="switchTab('science')" class="tab-button px-6 py-3 text-white font-semibold rounded-xl" id="tab-science"><i class="fas fa-flask mr-2"></i>Science</button>
+                <button onclick="switchTab('progress')" class="tab-button px-6 py-3 text-white font-semibold rounded-xl" id="tab-progress"><i class="fas fa-chart-line mr-2"></i>Progress</button>
+            </div></div>
+
+            <!-- TAB CONTENTS -->
+            <div id="products-tab" class="tab-content"><div class="mb-6 flex items-center justify-between">
+                <h4 class="text-2xl font-bold">Recommended Products</h4>
+                <div class="flex space-x-2"><button onclick="filterProducts('all')" class="filter-btn active px-4 py-2 bg-white/20 rounded-lg">All</button><button onclick="filterProducts('affordable')" class="filter-btn px-4 py-2 bg-white/20 rounded-lg">Budget</button><button onclick="filterProducts('premium')" class="filter-btn px-4 py-2 bg-white/20 rounded-lg">Premium</button></div>
+            </div><div id="product-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div></div>
+
+            <div id="routine-tab" class="tab-content hidden"><div class="grid md:grid-cols-2 gap-8">
+                <div class="glass p-6"><h4 class="text-xl font-bold mb-4"><i class="fas fa-sun mr-2 text-yellow-400"></i>Morning</h4><div id="morning-routine"></div></div>
+                <div class="glass p-6"><h4 class="text-xl font-bold mb-4"><i class="fas fa-moon mr-2 text-blue-300"></i>Evening</h4><div id="evening-routine"></div></div>
+            </div></div>
+
+            <div id="science-tab" class="tab-content hidden"><div class="glass p-6"><h4 class="text-xl font-bold mb-4"><i class="fas fa-microscope mr-2"></i>The Science</h4><div id="science-content" class="space-y-4"></div></div></div>
+
+            <div id="progress-tab" class="tab-content hidden"><div class="glass p-6"><h4 class="text-xl font-bold mb-4"><i class="fas fa-chart-line mr-2"></i>Progress</h4><div id="progress-chart" class="h-64 bg-white/10 rounded-xl"></div></div></div>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div class="glass rounded-2xl p-6 mt-8 text-center text-sm text-white/80"><i class="fas fa-info-circle mr-2"></i><strong>Disclaimer:</strong> Cosmetic recommendations only – not medical advice. Consult a dermatologist for serious concerns.</div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50"><div class="glass p-8 text-center"><div class="loading-spinner mx-auto mb-4"></div><h3 class="text-white text-lg">Analysing…</h3></div></div>
+
+    <!-- NOTIFICATION -->
+    <div id="notification-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <script>
+        /* ---------- GLOBAL STATE ---------- */
+        let isCameraOn=false, currentStream=null, currentSkinType='', skinAnalysis={}, analysisHistory=[];
+
+        /* ---------- CAMERA ---------- */
+        async function startCamera(){
+            try{
+                const stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:'user'}});
+                const v=document.getElementById('webcam-video');
+                v.srcObject=stream; v.classList.remove('hidden');
+                document.getElementById('camera-placeholder').classList.add('hidden');
+                document.getElementById('startBtn').classList.add('hidden');
+                document.getElementById('stopBtn').classList.remove('hidden');
+                document.getElementById('aiBtn').disabled=false;
+                currentStream=stream; isCameraOn=true;
+                notify('Camera started','success');
+            }catch{notify('Camera blocked','error');}
+        }
+        function stopCamera(){
+            if(currentStream){currentStream.getTracks().forEach(t=>t.stop()); currentStream=null;}
+            isCameraOn=false;
+            document.getElementById('webcam-video').classList.add('hidden');
+            document.getElementById('camera-placeholder').classList.remove('hidden');
+            document.getElementById('startBtn').classList.remove('hidden');
+            document.getElementById('stopBtn').classList.add('hidden');
+            document.getElementById('aiBtn').disabled=true;
+            stopScan(); notify('Camera stopped','info');
+        }
+
+        /* ---------- AI ANALYSIS ---------- */
+        async function startAIAnalysis(){
+            if(!isCameraOn){notify('Start camera first','warning'); return;}
+            showLoading(true); startScan();
+            await new Promise(r=>setTimeout(r,2500)); // simulate API
+            const types=['Acne-Prone Skin','Dry Skin','Oily Skin','Sensitive Skin','Normal Skin'];
+            currentSkinType=types[Math.floor(Math.random()*types.length)];
+            skinAnalysis={skinType:currentSkinType,confidence:(85+Math.random()*10).toFixed(1),concerns:getConcerns(currentSkinType),recommendations:getRecs(currentSkinType)};
+            document.getElementById('prediction-display').innerHTML=`<div class="text-white text-center"><div class="text-2xl font-bold mb-1">${currentSkinType}</div><div class="text-sm opacity-80">Confidence ${skinAnalysis.confidence}%</div></div>`;
+            stopScan(); showLoading(false); showResults(); notify('Analysis complete','success');
+        }
+        function showDemoResults(){/* same logic without camera */ startAIAnalysis();}
+
+        /* ---------- HELPERS ---------- */
+        function getConcerns(type){
+            const map={'Acne-Prone Skin':['Breakouts','Oil','Inflammation'],'Dry Skin':['Flakiness','Tightness','Barrier'],'Oily Skin':['Shine','Pores'],'Sensitive Skin':['Redness','Irritation'],'Normal Skin':['Maintenance']};
+            return map[type]||map['Normal Skin'];
+        }
+        function getRecs(type){
+            const map={'Acne-Prone Skin':'Salicylic cleanser + niacinamide','Dry Skin':'Ceramide cream + HA serum','Oily Skin':'Foam cleanser + BHA','Sensitive Skin':'Fragrance-free + centella','Normal Skin':' Gentle routine'};
+            return map[type]||map['Normal Skin'];
+        }
+        function startScan(){document.getElementById('scan-animation').classList.remove('hidden');}
+        function stopScan(){document.getElementById('scan-animation').classList.add('hidden');}
+        function showLoading(show){
+            document.getElementById('loading-overlay').classList.toggle('hidden',!show);
+        }
+
+        /* ---------- RESULTS ---------- */
+        function showResults(){
+            document.getElementById('results-section').classList.remove('hidden');
+            document.getElementById('skin-type-result').innerHTML=`
+                <div class="glass p-6 text-center mb-6">
+                    <h3 class="text-2xl font-bold mb-2">${currentSkinType}</h3>
+                    <p class="text-white/80 mb-4">${skinAnalysis.recommendations}</p>
+                    <div class="flex flex-wrap gap-2 justify-center">${skinAnalysis.concerns.map(c=>`<span class="bg-white/20 px-3 py-1 rounded-full text-sm">${c}</span>`).join('')}</div>
+                </div>`;
+            // chart
+            Plotly.newPlot('concerns-chart',[{x:skinAnalysis.concerns,y:skinAnalysis.concerns.map(()=>70+Math.random()*25),type:'bar',marker:{color:'rgba(102,126,234,.8)'}}],{margin:{t:20,b:60,l:40,r:20},paper_bgcolor:'transparent',plot_bgcolor:'transparent',font:{color:'#333'}},{responsive:true});
+            loadProducts(); loadRoutine(); loadScience(); window.scrollTo({top:document.getElementById('results-section').offsetTop-20,behavior:'smooth'});
+        }
+
+        /* ---------- PRODUCTS ---------- */
+        const productDB={
+            'Acne-Prone Skin':[
+                {id:'a1',name:'CeraVe Acne Cleanser',brand:'CeraVe',price:'$14.99',budget:'affordable',image:'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',rating:4.6,reviews:12500,ingredients:['4% Benzoyl Peroxide','Niacinamide']},
+                {id:'a2',name:'Paula’s Choice 2% BHA',brand:'Paula’s Choice',price:'$32',budget:'premium',image:'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',rating:4.7,reviews:15600,ingredients:['Salicylic Acid','Green Tea']}
+            ],
+            'Dry Skin':[
+                {id:'d1',name:'CeraVe Hydrating Cleanser',brand:'CeraVe',price:'$13.99',budget:'affordable',image:'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',rating:4.6,reviews:24500,ingredients:['Ceramides','Hyaluronic Acid']},
+                {id:'d2',name:'SkinCeuticals B5 Gel',brand:'SkinCeuticals',price:'$86',budget:'premium',image:'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop',rating:4.5,reviews:8900,ingredients:['Hyaluronic Acid','Vitamin B5']}
+            ]
+        };
+        function loadProducts(){
+            const prods=productDB[currentSkinType]||productDB['Acne-Prone Skin'];
+            document.getElementById('product-grid').innerHTML=prods.map(p=>`
+                <div class="product-card glass p-4 relative">
+                    <div class="budget-badge ${p.budget==='affordable'?'budget-affordable':'budget-premium'}">${p.budget==='affordable'?'Budget':'Premium'}</div>
+                    <img src="${p.image}" class="w-full h-40 object-cover rounded-xl mb-3">
+                    <h5 class="font-bold text-white">${p.name}</h5>
+                    <p class="text-white/70 text-sm mb-2">${p.brand}</p>
+                    <div class="flex items-center justify-between mb-3"><span class="text-white font-bold">${p.price}</span><span class="text-yellow-400 text-sm">★ ${p.rating}</span></div>
+                    <div class="flex flex-wrap gap-1 mb-3">${p.ingredients.map(i=>`<span class="text-xs bg-white/10 px-2 py-1 rounded">${i}</span>`).join('')}</div>
+                    <button onclick="addToRoutine('${p.id}')" class="w-full btn-primary py-2 rounded-lg text-sm"><i class="fas fa-plus mr-2"></i>Add to Routine</button>
+                </div>`).join('');
+        }
+        function filterProducts(budget){
+            const prods=productDB[currentSkinType]||productDB['Acne-Prone Skin'];
+            const filtered=budget==='all'?prods:prods.filter(p=>p.budget===budget);
+            document.getElementById('product-grid').innerHTML=filtered.map(p=>`
+                <div class="product-card glass p-4 relative">
+                    <div class="budget-badge ${p.budget==='affordable'?'budget-affordable':'budget-premium'}">${p.budget==='affordable'?'Budget':'Premium'}</div>
+                    <img src="${p.image}" class="w-full h-40 object-cover rounded-xl mb-3">
+                    <h5 class="font-bold text-white">${p.name}</h5>
+                    <p class="text-white/70 text-sm mb-2">${p.brand}</p>
+                    <div class="flex items-center justify-between mb-3"><span class="text-white font-bold">${p.price}</span><span class="text-yellow-400 text-sm">★ ${p.rating}</span></div>
+                    <div class="flex flex-wrap gap-1 mb-3">${p.ingredients.map(i=>`<span class="text-xs bg-white/10 px-2 py-1 rounded">${i}</span>`).join('')}</div>
+                    <button onclick="addToRoutine('${p.id}')" class="w-full btn-primary py-2 rounded-lg text-sm"><i class="fas fa-plus mr-2"></i>Add to Routine</button>
+                </div>`).join('');
+            document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); event.target.classList.add('active');
+        }
+        function addToRoutine(id){notify('Product saved (demo)','success');}
+
+        /* ---------- ROUTINE ---------- */
+        const routineDB={
+            'Acne-Prone Skin':{
+                morning:[{step:1,product:'Salicylic cleanser',type:'Cleanser',purpose:'Remove oil & unclog',application:'30 s massage, rinse',timing:'Daily'},{step:2,product:'Niacinamide 10%',type:'Serum',purpose:'Oil control',application:'2-3 drops',timing:'Daily'},{step:3,product:'Oil-free moisturiser',type:'Moisturiser',purpose:'Hydrate without clogging',application:'Pea size',timing:'Daily'},{step:4,product:'Non-comedogenic SPF 30',type:'Sunscreen',purpose:'UV protection',application:'Generous',timing:'Daily'}],
+                evening:[{step:1,product:'Double cleanse',type:'Cleanser',purpose:'Remove makeup & SPF',application:'Oil then foam',timing:'Daily'},{step:2,product:'2 % BHA',type:'Exfoliant',purpose:'Unclog pores',application:'Thin layer',timing:'3×/week'},{step:3,product:'Benzoyl peroxide 2.5 %',type:'Treatment',purpose:'Kill bacteria',application:'Spot or layer',timing:'Daily'},{step:4,product:'Light moisturiser',type:'Moisturiser',purpose:'Barrier support',application:'After treatments',timing:'Daily'}]
+            },
+            'Dry Skin':{
+                morning:[{step:1,product:'Cream cleanser',type:'Cleanser',purpose:'Cleanse w/o stripping',application:'Gentle massage',timing:'Daily'},{step:2,product:'Hyaluronic serum',type:'Serum',purpose:'Deep hydration',application:'On damp skin',timing:'Daily'},{step:3,product:'Ceramide cream',type:'Moisturiser',purpose:'Barrier repair',application:'Generous',timing:'Daily'},{step:4,product:'Hydrating SPF 30',type:'Sunscreen',purpose:'UV + moisture',application:'Final step',timing:'Daily'}],
+                evening:[{step:1,product:'Cleansing balm',type:'Cleanser',purpose:'Dissolve makeup',application:'Dry skin massage',timing:'Daily'},{step:2,product:'Hydrating cleanser',type:'Cleanser',purpose:'Remove residue',application:'Gentle',timing:'Daily'},{step:3,product:'Facial oil',type:'Treatment',purpose:'Seal moisture',application:'2-3 drops',timing:'Daily'},{step:4,product:'Rich night cream',type:'Moisturiser',purpose:'Overnight repair',application:'Thick layer',timing:'Daily'}]
+            }
+        };
+        function loadRoutine(){
+            const r=routineDB[currentSkinType]||routineDB['Acne-Prone Skin'];
+            document.getElementById('morning-routine').innerHTML=r.morning.map(s=>`
+                <div class="glass p-4 mb-3">
+                    <div class="flex items-center justify-between mb-2"><span class="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-bold">Step ${s.step}</span><span class="text-white/60 text-sm">${s.timing}</span></div>
+                    <h5 class="font-bold text-white mb-1">${s.product}</h5>
+                    <p class="text-white/80 text-sm mb-2">${s.purpose}</p>
+                    <p class="text-white/60 text-xs"><strong>How:</strong> ${s.application}</p>
+                </div>`).join('');
+            document.getElementById('evening-routine').innerHTML=r.evening.map(s=>`
+                <div class="glass p-4 mb-3">
+                    <div class="flex items-center justify-between mb-2"><span class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-bold">Step ${s.step}</span><span class="text-white/60 text-sm">${s.timing}</span></div>
+                    <h5 class="font-bold text-white mb-1">${s.product}</h5>
+                    <p class="text-white/80 text-sm mb-2">${s.purpose}</p>
+                    <p class="text-white/60 text-xs"><strong>How:</strong> ${s.application}</p>
+                </div>`).join('');
+        }
+
+        /* ---------- SCIENCE ---------- */
+        const scienceDB={
+            'Acne:'CeraVe',price:'$14.99',budget:'affordable',rating:4.6,reviews:12500,ing:['Benzoyl Peroxide','Niacinamide']},
+                {id:'a2',name:'Paula\'s Choice BHA',brand:'Paula\'s Choice',price:'$32',budget:'premium',rating:4.7,reviews:15600,ing:['Salicylic Acid','Green Tea']}
+            ],
+            'Dry Skin':[
+                {id:'d1',name:'CeraVe Hydrating Cleanser',brand:'CeraVe',price:'$13.99',budget:'affordable',rating:4.6,reviews:24500,ing:['Ceramides','Hyaluronic Acid']},
+                {id:'d2',name:'SkinCeuticals B5 Gel',brand:'SkinCeuticals',price:'$86',budget:'premium',rating:4.5,reviews:8900,ing:['Hyaluronic Acid','Vitamin B5']}
+            ]
+        };
+        function loadProducts(){
+            const list=(productDB[currentSkinType]||productDB['Acne-Prone Skin']).map(p=>`
+                <div class="product-card glass p-4" data-budget="${p.budget}">
+                    <div class="budget-badge ${p.budget==='affordable'?'budget-affordable':'budget-premium'}">${p.budget==='affordable'?'Budget':'Premium'}</div>
+                    <img src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop" class="w-full h-32 object-cover rounded mb-3">
+                    <h5 class="font-bold mb-1">${p.name}</h5>
+                    <p class="text-white/70 text-sm mb-2">${p.brand}</p>
+                    <div class="flex items-center mb-2"><div class="flex text-yellow-400 text-xs mr-2">${'★'.repeat(Math.floor(p.rating))}</div><span class="text-white/60 text-xs">${p.rating} (${p.reviews})</span></div>
+                    <div class="flex flex-wrap gap-1 mb-3">${p.ing.slice(0,2).map(i=>`<span class="ingredient-tag text-xs px-2 py-1">${i}</span>`).join('')}</div>
+                    <div class="flex items-center justify-between"><span class="font-bold text-white">${p.price}</span><button onclick="addToRoutine('${p.id}')" class="px-3 py-1 bg-gradient-to-r from-purple-500 to-blue-500 rounded text-sm">Add</button></div>
+                </div>`).join('');
+            document.getElementById('product-grid').innerHTML=list;
+        }
+        function filterProducts(budget){
+            document.querySelectorAll('.product-card').forEach(card=>{
+                card.style.display=(budget==='all'||card.dataset.budget===budget)?'block':'none';
+            });
+            document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        /* ---------- ROUTINE ---------- */
+        function loadRoutine(){
+            const r=getRoutineForSkinType(currentSkinType);
+            document.getElementById('morning-routine').innerHTML=r.morning.map(s=>stepHTML(s,'purple')).join('');
+            document.getElementById('evening-routine').innerHTML=r.evening.map(s=>stepHTML(s,'blue')).join('');
+        }
+        function stepHTML(s,color){
+            return`<div class="routine-step glass p-4 mb-3"><div class="flex items-center justify-between mb-2"><span class="bg-gradient-to-r from-${color}-500 to-${color}-600 text-white px-3 py-1 rounded-full text-xs font-bold">Step ${s.step}</span><span class="text-white/60 text-xs">${s.timing}</span></div><h6 class="font-bold mb-1">${s.product}</h6><p class="text-white/80 text-sm mb-2">${s.purpose}</p><div class="text-white/70 text-xs"><strong>How:</strong> ${s.application}</div></div>`;
+        }
+        function getRoutineForSkinType(type){
+            const db={
+                'Acne-Prone Skin':{
+                    morning:[{step:1,product:'Salicylic Cleanser',purpose:'Remove oil',application:'30s massage, rinse',timing:'Daily'},{step:2,product:'Niacinamide Serum',purpose:'Control oil',application:'3 drops, pat',timing:'Daily'},{step:3,product:'Oil-free Moisturizer',purpose:'Hydrate',application:'Pea size',timing:'Daily'},{step:4,product:'SPF 30',purpose:'UV protection',application:'Before sun',timing:'Daily'}],
+                    evening:[{step:1,product:'Double Cleanse',purpose:'Remove buildup',application:'Oil then foam',timing:'Daily'},{step:2,product:'BHA Exfoliant',purpose:'Unclog pores',application:'Thin layer',timing:'3×/wk'},{step:3,product:'Treatment',purpose:'Target spots',application:'Spot or all-over',timing:'Daily'},{step:4,product:'Light Moisturizer',purpose:'Barrier support',application:'After treatments',timing:'Daily'}]
                 },
-                confidence: Math.floor(Math.random() * 15) + 85
+                'Dry Skin':{
+                    morning:[{step:1,product:'Cream Cleanser',purpose:'Gentle cleanse',application:'Rinse lukewarm',timing:'Daily'},{step:2,product:'HA Serum',purpose:'Hydration',application:'On damp skin',timing:'Daily'},{step:3,product:'Ceramide Cream',purpose:'Barrier repair',application:'Massage well',timing:'Daily'},{step:4,product:'Hydrating SPF',purpose:'Protect + hydrate',application:'Final step',timing:'Daily'}],
+                    evening:[{step:1,product:'Cleansing Balm',purpose:'Dissolve makeup',application:'Dry skin first',timing:'Daily'},{step:2,product:'Hydrating Cleanser',purpose:'Remove residue',application:'Gentle massage',timing:'Daily'},{step:3,product:'Serum/Oil',purpose:'Overnight hydration',application:'Layer then oil',timing:'Daily'},{step:4,product:'Rich Night Cream',purpose:'Intensive repair',application:'Generous amount',timing:'Daily'}]
+                }
             };
-            
-            showResults();
-            
-        }, 3000);
-    }
-
-    function showResults() {
-        document.getElementById('results-section').classList.remove('hidden');
-        
-        // Update skin type result
-        const skinTypeResult = document.getElementById('skin-type-result');
-        skinTypeResult.innerHTML = `
-            <div class="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-4 rounded-2xl inline-block">
-                <h4 class="text-2xl font-bold mb-2">Your Skin Type: ${currentSkinType}</h4>
-                <p class="text-white/90">${productDatabase[currentSkinType].description}</p>
-            </div>
-        `;
-        
-        // Create concerns chart
-        createConcernsChart();
-        
-        // Load products
-        loadProducts();
-        
-        // Load routines
-        loadRoutines();
-        
-        // Load science content
-        loadScienceContent();
-        
-        // Scroll to results
-        document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
-        
-        // Save analysis if user is logged in
-        if (currentUser) {
-            saveAnalysis();
-        }
-    }
-
-    function createConcernsChart() {
-        const data = [{
-            x: Object.keys(skinAnalysis.concerns),
-            y: Object.values(skinAnalysis.concerns),
-            type: 'bar',
-            marker: {
-                color: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe'],
-                opacity: 0.8
-            }
-        }];
-        
-        const layout = {
-            title: 'Skin Concerns Analysis',
-            xaxis: { title: 'Concern Areas' },
-            yaxis: { title: 'Priority Level (%)', range: [0, 100] },
-            margin: { t: 50, b: 80, l: 60, r: 40 },
-            paper_bgcolor: 'rgba(0,0,0,0)',
-            plot_bgcolor: 'rgba(0,0,0,0)',
-            font: { color: '#374151' }
-        };
-        
-        Plotly.newPlot('concerns-chart', data, layout, {responsive: true});
-    }
-
-    function loadProducts() {
-        const productGrid = document.getElementById('product-grid');
-        const products = productDatabase[currentSkinType].products;
-        
-        productGrid.innerHTML = products.map(product => `
-            <div class="product-card glass-morphism rounded-2xl p-6 relative" data-budget="${product.budget}">
-                <div class="budget-badge ${product.budget === 'affordable' ? 'budget-affordable' : 'budget-premium'}">
-                    ${product.budget === 'affordable' ? 'Budget-Friendly' : 'Premium'}
-                </div>
-                
-                <div class="aspect-square mb-4 rounded-xl overflow-hidden">
-                    <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">
-                </div>
-                
-                <div class="mb-4">
-                    <h5 class="text-lg font-bold text-white mb-1">${product.name}</h5>
-                    <p class="text-white/70 text-sm mb-2">${product.brand}</p>
-                    <p class="text-white/80 text-sm mb-3">${product.description}</p>
-                </div>
-                
-                <div class="mb-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-2xl font-bold text-white">${product.price}</span>
-                        <div class="flex items-center">
-                            <div class="flex text-yellow-400 mr-2">
-                                ${'★'.repeat(Math.floor(product.rating))}${'☆'.repeat(5 - Math.floor(product.rating))}
-                            </div>
-                            <span class="text-white/70 text-sm">${product.rating}</span>
-                        </div>
-                    </div>
-                    <p class="text-white/60 text-xs">${product.reviews.toLocaleString()} reviews</p>
-                </div>
-                
-                <div class="mb-4">
-                    <h6 class="text-white font-semibold mb-2">Key Ingredients:</h6>
-                    <div class="flex flex-wrap gap-2">
-                        ${product.ingredients.slice(0, 3).map(ingredient => 
-                            `<span class="ingredient-tag px-3 py-1 rounded-full text-xs font-medium">${ingredient}</span>`
-                        ).join('')}
-                    </div>
-                </div>
-                
-                <div class="mb-4">
-                    <h6 class="text-white font-semibold mb-2">Usage:</h6>
-                    <p class="text-white/80 text-sm">${product.usage}</p>
-                </div>
-                
-                <div class="flex flex-wrap gap-2 mb-4">
-                    ${product.features.map(feature => 
-                        `<span class="bg-white/10 text-white px-2 py-1 rounded-lg text-xs">${feature}</span>`
-                    ).join('')}
-                </div>
-                
-                <button onclick="addToRoutine('${product.id}')" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white py-3 rounded-xl font-semibold hover:from-purple-600 hover:to-blue-600 transition-all">
-                    <i class="fas fa-plus mr-2"></i>Add to Routine
-                </button>
-            </div>
-        `).join('');
-    }
-
-    function loadRoutines() {
-        const morningRoutine = document.getElementById('morning-routine');
-        const eveningRoutine = document.getElementById('evening-routine');
-        
-        const morningSteps = productDatabase[currentSkinType].morningRoutine;
-        const eveningSteps = productDatabase[currentSkinType].eveningRoutine;
-        
-        morningRoutine.innerHTML = morningSteps.map((step, index) => `
-            <div class="routine-step bg-white/10 p-4 rounded-xl mb-4">
-                <div class="flex items-start space-x-4">
-                    <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        ${step.step}
-                    </div>
-                    <div class="flex-1">
-                        <h5 class="text-white font-semibold mb-1">${step.product}</h5>
-                        <p class="text-white/80 text-sm mb-2">${step.purpose}</p>
-                        <p class="text-white/60 text-xs mb-2">${step.application}</p>
-                        <span class="bg-white/20 text-white px-2 py-1 rounded-lg text-xs">${step.timing}</span>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-        
-        eveningRoutine.innerHTML = eveningSteps.map((step, index) => `
-            <div class="routine-step bg-white/10 p-4 rounded-xl mb-4">
-                <div class="flex items-start space-x-4">
-                    <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        ${step.step}
-                    </div>
-                    <div class="flex-1">
-                        <h5 class="text-white font-semibold mb-1">${step.product}</h5>
-                        <p class="text-white/80 text-sm mb-2">${step.purpose}</p>
-                        <p class="text-white/60 text-xs mb-2">${step.application}</p>
-                        <span class="bg-white/20 text-white px-2 py-1 rounded-lg text-xs">${step.timing}</span>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function loadScienceContent() {
-        const scienceContent = document.getElementById('science-content');
-        const explanations = productDatabase[currentSkinType].scienceExplanations;
-        
-        scienceContent.innerHTML = explanations.map((explanation, index) => `
-            <div class="bg-white/10 p-6 rounded-xl mb-4">
-                <h5 class="text-white font-bold text-lg mb-3">
-                    <i class="fas fa-flask mr-2 text-purple-400"></i>${explanation.title}
-                </h5>
-                <p class="text-white/80 leading-relaxed">${explanation.content}</p>
-            </div>
-        `).join('');
-    }
-
-    function switchTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.add('hidden');
-        });
-        
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.classList.remove('active');
-        });
-        
-        document.getElementById(`${tabName}-tab`).classList.remove('hidden');
-        document.getElementById(`tab-${tabName}`).classList.add('active');
-    }
-
-    function filterProducts(budget) {
-        const products = document.querySelectorAll('.product-card');
-        const buttons = document.querySelectorAll('.filter-btn');
-        
-        buttons.forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-        
-        products.forEach(product => {
-            if (budget === 'all') {
-                product.style.display = 'block';
-            } else {
-                const productBudget = product.dataset.budget;
-                if (productBudget === budget) {
-                    product.style.display = 'block';
-                } else {
-                    product.style.display = 'none';
-                }
-            }
-        });
-    }
-
-    function addToRoutine(productId) {
-        if (!currentUser) {
-            showNotification('Please login to save products', 'warning');
-            return;
-        }
-        const data = getUserData();
-        if (data.savedProducts.includes(productId)) {
-            showNotification('Product already in your routine', 'info');
-            return;
-        }
-        data.savedProducts.push(productId);
-        saveUserData(data);
-        
-        // Update user object
-        currentUser.savedProducts = data.savedProducts;
-        localStorage.setItem('skincastUser', JSON.stringify(currentUser));
-        
-        // Update button
-        const btn = event.target;
-        btn.innerHTML = '<i class="fas fa-check mr-2"></i>Saved';
-        btn.classList.remove('bg-gradient-to-r', 'from-purple-500', 'to-blue-500');
-        btn.classList.add('bg-green-500');
-        
-        showNotification('Product added to your routine!', 'success');
-    }
-
-    function startNewAnalysis() {
-        document.getElementById('results-section').classList.add('hidden');
-        stopCamera();
-        
-        document.getElementById('prediction-display').innerHTML = `
-            <p class="text-white/80 text-center">Start camera to see real-time analysis</p>
-        `;
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function shareResults() {
-        if (navigator.share) {
-            navigator.share({
-                title: 'My SkinCast AI Analysis Results',
-                text: `I just got my personalized skincare analysis from SkinCast AI! My skin type is ${currentSkinType}.`,
-                url: window.location.href
-            });
-        } else {
-            const text = `I just got my personalized skincare analysis from SkinCast AI! My skin type is ${currentSkinType}. Check it out: ${window.location.href}`;
-            navigator.clipboard.writeText(text).then(() => {
-                showNotification('Results copied to clipboard!', 'success');
-            });
-        }
-    }
-
-    function showLoading() {
-        document.getElementById('loading-overlay').classList.remove('hidden');
-        document.getElementById('loading-overlay').classList.add('flex');
-    }
-
-    function hideLoading() {
-        document.getElementById('loading-overlay').classList.add('hidden');
-        document.getElementById('loading-overlay').classList.remove('flex');
-    }
-
-    function showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-xl text-white max-w-sm ${
-            type === 'success' ? 'bg-green-500' : 
-            type === 'error' ? 'bg-red-500' : 
-            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
-        }`;
-        
-        notification.innerHTML = `
-            <div class="flex items-center">
-                <i class="fas ${
-                    type === 'success' ? 'fa-check-circle' : 
-                    type === 'error' ? 'fa-exclamation-circle' : 
-                    type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'
-                } mr-3"></i>
-                <span>${message}</span>
-            </div>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
-    }
-
-    function createProgressChart() {
-        if (!currentUser) {
-            document.getElementById('progress-chart').innerHTML = '<p class="text-white/60">Login to view your progress</p>';
-            return;
-        }
-        
-        const data = getUserData();
-        const dates = data.analyses.map(a => new Date(a.date).toLocaleDateString());
-        const scores = data.analyses.map(a => a.confidence);
-
-        if (dates.length === 0) {
-            document.getElementById('progress-chart').innerHTML = '<p class="text-white/60">No analyses yet – perform one to see progress</p>';
-            return;
+            return db[type]||db['Acne-Prone Skin'];
         }
 
-        const trace = {
-            x: dates,
-            y: scores,
-            type: 'scatter',
-            mode: 'lines+markers',
-            line: { color: '#667eea', width: 3 },
-            marker: { color: '#667eea', size: 8 }
-        };
-        const layout = {
-            title: 'Skin Health Progress',
-            xaxis: { title: 'Date' },
-            yaxis: { title: 'Confidence Score', range: [0, 100] },
-            margin: { t: 50, b: 50, l: 60, r: 40 },
-            paper_bgcolor: 'rgba(0,0,0,0)',
-            plot_bgcolor: 'rgba(0,0,0,0)',
-            font: { color: 'white' }
-        };
-        Plotly.newPlot('progress-chart', [trace], layout, { responsive: true });
-    }
-
-    document.addEventListener('click', e => {
-        if (e.target.id === 'tab-progress') {
-            setTimeout(createProgressChart, 100);
+        /* ---------- SCIENCE ---------- */
+        function loadScience(){
+            const sci=getScienceForSkinType(currentSkinType);
+            document.getElementById('science-content').innerHTML=sci.map(s=>`<div class="glass p-4"><h5 class="font-bold mb-2">${s.title}</h5><p class="text-white/80 text-sm">${s.content}</p></div>`).join('');
         }
-    });
+        function getScienceForSkinType(type){
+            const db={
+                'Acne-Prone Skin':[
+                    {title:'Salicylic Acid Power',content:'Oil-soluble BHA dissolves dead cells inside pores, reducing clogs by 60%.'},
+                    {title:'Niacinamide Benefits','content':'Regulates oil, calms inflammation, and fades marks—proven 40-60% acne reduction.'}
+                ],
+                'Dry Skin':[
+                    {title:'Hyaluronic Acid','content':'Holds 1000× its weight in water, drawing moisture deep into skin.'},
+                    {title:'Ceramides','content':'50% of skin barrier; supplementation cuts water loss 45%.'}
+                ]
+            };
+            return db[type]||db['Acne-Prone Skin'];
+        }
 
-    // Initialize on load
-    window.addEventListener('DOMContentLoaded', () => {
-        initAuth();
-    });
-</script>
+        /* ---------- TABS ---------- */
+        function switchTab(name){
+            document.querySelectorAll('.tab-content').forEach(t=>t.classList.add('hidden'));
+            document.querySelectorAll('.tab-button').forEach(b=>b.classList.remove('active'));
+            document.getElementById(name+'-tab').classList.remove('hidden');
+            document.getElementById('tab-'+name).classList.add('active');
+            if(name==='progress')loadProgress();
+        }
+
+        /* ---------- PROGRESS ---------- */
+        function loadProgress(){
+            const dates=['2 May','9 May','16 May','23 May','30 May'];
+            const vals=[82,85,88,86,90];
+            Plotly.newPlot('progress-chart',[{x:dates,y:vals,type:'scatter',mode:'lines+markers',line:{color:'#667eea',width:3},marker:{color:'#667eea',size:8},fill:'tozeroy',fillcolor:'rgba(102,126,234,.2)'}],{margin:{t:20,b:40,l:40,r:20},paper_bgcolor:'transparent',plot_bgcolor:'transparent',font:{color:'white'}},{responsive:true});
+        }
+
+        /* ---------- SHARE / NEW ---------- */
+        function shareResults(){
+            const txt=`I just discovered my skin type is ${currentSkinType} with SkinAI!`;
+            navigator.clipboard.writeText(txt+' '+location.href).then(()=>notify('Copied to clipboard!','success'));
+        }
+        function startNewAnalysis(){currentSkinType=''; document.getElementById('results-section').classList.add('hidden'); window.scrollTo({top:0,behavior:'smooth'}); notify('Ready for new scan','info');}
+
+        /* ---------- NOTIFICATION ---------- */
+        function notify(msg,type){
+            const colors={success:'bg-green-500',error:'bg-red-500',warning:'bg-yellow-500',info:'bg-blue-500'};
+            const n=document.createElement('div'); n.className=`notification ${colors[type]} text-white px-4 py-2 rounded shadow-lg max-w-sm`; n.innerHTML=`<i class="fas fa-${type==='success'?'check':type==='error'?'exclamation-triangle':'info'} mr-2"></i>${msg}`;
+            document.getElementById('notification-container').appendChild(n);
+            setTimeout(()=>n.classList.add('show'),100);
+            setTimeout(()=>{n.classList.remove('show'); setTimeout(()=>n.remove(),300)},2500);
+        }
+
+        /* ---------- INITIALISE ---------- */
+        document.addEventListener('DOMContentLoaded',()=>{});
+    </script>
 </body>
 </html>
